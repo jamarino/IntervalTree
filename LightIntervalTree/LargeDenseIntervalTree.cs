@@ -1,4 +1,6 @@
-﻿namespace LightIntervalTree
+﻿using System.Numerics;
+
+namespace LightIntervalTree
 {
     public class LargeDenseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         where TKey : IComparable<TKey>
@@ -8,13 +10,13 @@
 
         public int NodeCount => _nodes.Count;
 
-        public int IntervalCount { get; private set; }
+        public int Count { get; private set; }
 
         public int TreeDepth { get; private set; }
 
         public void Add(TKey from, TKey to, TValue value)
         {
-            IntervalCount++;
+            Count++;
 
             if (_nodes.Count == 0)
             {
@@ -39,6 +41,9 @@
             }
 
             RecursiveAdd(0, 1, from, to, value);
+
+            if (TreeDepth > 2 * BitOperations.Log2((uint)_nodes.Count))
+                Optimize();
         }
 
         private void RecursiveAdd(int nodeIndex, int depth, TKey from, TKey to, TValue value)
@@ -109,6 +114,8 @@
 
         public IEnumerable<TValue> Query(TKey target)
         {
+            if (_nodes.Count is 0) return Enumerable.Empty<TValue>();
+
             var results = new List<TValue>();
 
             var node = _nodes[0];
@@ -142,139 +149,8 @@
             return results;
         }
 
+
         public void Optimize()
-        {
-            (int, int) NotVisited = (int.MinValue, int.MinValue);
-            var history = new Stack<(int,(int,int),(int,int))>();
-
-            history.Push((0, NotVisited, NotVisited));
-            var depth = NotVisited;
-            
-            while (history.Count > 0)
-            {
-                // there are still more nodes to visit
-                var (nodeIndex, leftInfo, rightInfo) = history.Peek();
-                
-                if (nodeIndex is -1)
-                {
-                    // TODO this shouldn't happen anymore...
-                    throw new Exception("This wasn't supposed to happen anymore...");
-                    depth = (0, 0);
-                    history.Pop();
-                    continue;
-                }
-
-                var node = _nodes[nodeIndex];
-
-                if (node.LeftNodeIndex == -1 && node.RightNodeIndex == -1)
-                {
-                    // this is a leaf node
-                    depth = (0, 0);
-                    history.Pop();
-                    continue;
-                }
-
-
-                // TODO: Redo this part... If children have not been visited, push BOTH nodes.
-                // Make depth a stack so resulting (int, int) can be pushed, or do I just need two variables?
-
-
-                if (leftInfo == NotVisited)
-                {
-                    // left node not yet visited
-                    if (depth != NotVisited)
-                    {
-                        // if depth is set, then we just returned from visiting left
-                        leftInfo = depth;
-                        depth = NotVisited;
-                    }
-                    //else if (node.LeftNodeIndex == -1)
-                    //{
-                    //    // there is no left node
-                    //    leftInfo = (0, 0);
-                    //}
-                    //else
-                    else if (node.LeftNodeIndex is not -1)
-                    {
-                        // push left node
-                        history.Push((node.LeftNodeIndex, NotVisited, NotVisited));
-                        continue;
-                    }
-                }
-
-                if (rightInfo == NotVisited)
-                {
-                    // right node not yet visited
-                    if (depth != NotVisited)
-                    {
-                        // if depth is set, then we just returned from visiting right
-                        rightInfo = depth;
-                        depth = NotVisited;
-                    }
-                    //else if (node.RightNodeIndex == -1)
-                    //{
-                    //    // there is no right node
-                    //    rightInfo = (0, 0);
-                    //}
-                    //else
-                    else if (node.RightNodeIndex is not -1)
-                    {
-                        // "save" changes leftDepth
-                        history.Pop();
-                        history.Push((nodeIndex, leftInfo, rightInfo));
-
-                        // push right node
-                        history.Push((node.RightNodeIndex, NotVisited, NotVisited));
-                        continue;
-                    }
-                }
-
-                // optimize!
-                var leftDepth = Math.Max(leftInfo.Item1, leftInfo.Item2) + 1;
-                var rightDepth = Math.Max(rightInfo.Item1, rightInfo.Item2) + 1;
-
-                if (leftDepth - rightDepth > 1)
-                {
-                    // left is deeper
-                    if (leftInfo.Item1 < leftInfo.Item2)
-                    {
-                        // need to pull up deeper subtree
-                        PullUpLeft(nodeIndex);
-                    }
-                    else
-                    {
-                        RotateRight(nodeIndex);
-                    }
-
-                    leftDepth--;
-                    rightDepth++;
-                }
-                else if (rightDepth - leftDepth > 1)
-                {
-                    // right is deeper
-                    if (rightInfo.Item1 > rightInfo.Item2)
-                    {
-                        // need to pull up deeper subtree
-                        PullUpRight(nodeIndex);
-                    }
-                    else
-                    {
-                        RotateLeft(nodeIndex);
-                    }
-
-                    rightDepth--;
-                    leftDepth++;
-                }
-
-                // set depth and return to parent node
-                depth = (leftDepth, rightDepth);
-                history.Pop();
-            }
-
-            TreeDepth = Math.Max(depth.Item1, depth.Item2) + 1;
-        }
-
-        public void OptimizeRecursive()
         {
             (int, int) OptRec(int rootIndex)
             {

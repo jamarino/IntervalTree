@@ -22,6 +22,7 @@ namespace Benchmark
         {
             yield return new IntervalTree.IntervalTree<long, int>();
             yield return new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>());
+            yield return new TreeAdapter<long, int>(new LightIntervalTree.LargeDenseIntervalTree<long, int>());
         }
 
         [GlobalSetup]
@@ -45,7 +46,7 @@ namespace Benchmark
             }
 
             _treeV1.Query(0);
-            _treeV2.OptimizeRecursive();
+            _treeV2.Optimize();
         }
 
 
@@ -68,7 +69,7 @@ namespace Benchmark
             {
                 tree.Add(from, to, val);
             }
-            tree.OptimizeRecursive();
+            tree.Optimize();
         }
 
         [Benchmark(OperationsPerInvoke = 1000)]

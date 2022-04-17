@@ -1,20 +1,23 @@
-﻿namespace LightIntervalTree
+﻿using System.Numerics;
+
+namespace LightIntervalTree
 {
     public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         where TKey : IComparable<TKey>
     {
         private readonly List<Node> _nodes = new();
+        private readonly List<Interval> _intervals = new() { new Interval() };
         private IComparer<TKey> _comparer = Comparer<TKey>.Default;
 
         public int NodeCount => _nodes.Count;
 
-        public int IntervalCount { get; private set; }
+        public int Count { get; private set; }
 
         public int TreeDepth { get; private set; }
 
         public void Add(TKey from, TKey to, TValue value)
         {
-            IntervalCount++;
+            Count++;
 
             if (_nodes.Count == 0)
             {
@@ -24,21 +27,24 @@
                     Center = from,
                     LeftNodeIndex = -1,
                     RightNodeIndex = -1,
-                    Intervals = new()
-                    {
-                        new Interval
-                        {
-                            From = from,
-                            To = to,
-                            Value = value
-                        }
-                    }
+                    Interval = _intervals.Count
                 });
+
+                _intervals.Add(new Interval
+                {
+                    From = from,
+                    To = to,
+                    Value = value
+                });
+
                 TreeDepth = 1;
                 return;
             }
 
             RecursiveAdd(0, 1, from, to, value);
+
+            if (TreeDepth > 2 * BitOperations.Log2((uint)_nodes.Count))
+                Optimize();
         }
 
         private void RecursiveAdd(int nodeIndex, int depth, TKey from, TKey to, TValue value)
@@ -51,16 +57,16 @@
                 node.Center = from;
                 node.LeftNodeIndex = -1;
                 node.RightNodeIndex = -1;
-                node.Intervals = new List<Interval>
-                { 
-                    new Interval
-                    {
-                        From = from,
-                        To = to,
-                        Value = value
-                    }
-                };
+                node.Interval = _intervals.Count;
                 _nodes.Add(node);
+
+                _intervals.Add(new Interval
+                {
+                    From = from,
+                    To = to,
+                    Value = value
+                });
+
                 TreeDepth = Math.Max(TreeDepth, depth);
                 return;
             }
@@ -95,13 +101,28 @@
             else
             {
                 // add to current node
-                var list = node.Intervals ??= new List<Interval>();
-                list.Add(new Interval
+                // TODO insert in ascending order
+                var intervalIndex = node.Interval;
+                var interval = _intervals[intervalIndex];
+
+                while (true)
+                {
+                    if (interval.Next is 0) break;
+                    intervalIndex = interval.Next;
+                    interval = _intervals[intervalIndex];
+                }
+
+                _intervals.Add(new Interval
                 {
                     From = from,
                     To = to,
                     Value = value
                 });
+
+                _intervals[intervalIndex] = interval with
+                {
+                    Next = _intervals.Count - 1
+                };
             }
 
             _nodes[nodeIndex] = node;
@@ -109,12 +130,15 @@
 
         public IEnumerable<TValue> Query(TKey target)
         {
+            if (_nodes.Count is 0) return Enumerable.Empty<TValue>();
+
             var results = new List<TValue>();
 
             var node = _nodes[0];
             while (true)
             {
-                foreach (var interval in node.Intervals)
+                var interval = _intervals[node.Interval];
+                while (true)
                 {
                     if (_comparer.Compare(target, interval.From) >= 0 &&
                         _comparer.Compare(target, interval.To) <= 0)
@@ -122,6 +146,8 @@
                         // target is in interval
                         results.Add(interval.Value);
                     }
+                    if (interval.Next is 0) break;
+                    interval = _intervals[interval.Next];
                 }
 
                 if (_comparer.Compare(target, node.Center) == 0) break;
@@ -143,138 +169,6 @@
         }
 
         public void Optimize()
-        {
-            (int, int) NotVisited = (int.MinValue, int.MinValue);
-            var history = new Stack<(int,(int,int),(int,int))>();
-
-            history.Push((0, NotVisited, NotVisited));
-            var depth = NotVisited;
-            
-            while (history.Count > 0)
-            {
-                // there are still more nodes to visit
-                var (nodeIndex, leftInfo, rightInfo) = history.Peek();
-                
-                if (nodeIndex is -1)
-                {
-                    // TODO this shouldn't happen anymore...
-                    throw new Exception("This wasn't supposed to happen anymore...");
-                    depth = (0, 0);
-                    history.Pop();
-                    continue;
-                }
-
-                var node = _nodes[nodeIndex];
-
-                if (node.LeftNodeIndex == -1 && node.RightNodeIndex == -1)
-                {
-                    // this is a leaf node
-                    depth = (0, 0);
-                    history.Pop();
-                    continue;
-                }
-
-
-                // TODO: Redo this part... If children have not been visited, push BOTH nodes.
-                // Make depth a stack so resulting (int, int) can be pushed, or do I just need two variables?
-
-
-                if (leftInfo == NotVisited)
-                {
-                    // left node not yet visited
-                    if (depth != NotVisited)
-                    {
-                        // if depth is set, then we just returned from visiting left
-                        leftInfo = depth;
-                        depth = NotVisited;
-                    }
-                    //else if (node.LeftNodeIndex == -1)
-                    //{
-                    //    // there is no left node
-                    //    leftInfo = (0, 0);
-                    //}
-                    //else
-                    else if (node.LeftNodeIndex is not -1)
-                    {
-                        // push left node
-                        history.Push((node.LeftNodeIndex, NotVisited, NotVisited));
-                        continue;
-                    }
-                }
-
-                if (rightInfo == NotVisited)
-                {
-                    // right node not yet visited
-                    if (depth != NotVisited)
-                    {
-                        // if depth is set, then we just returned from visiting right
-                        rightInfo = depth;
-                        depth = NotVisited;
-                    }
-                    //else if (node.RightNodeIndex == -1)
-                    //{
-                    //    // there is no right node
-                    //    rightInfo = (0, 0);
-                    //}
-                    //else
-                    else if (node.RightNodeIndex is not -1)
-                    {
-                        // "save" changes leftDepth
-                        history.Pop();
-                        history.Push((nodeIndex, leftInfo, rightInfo));
-
-                        // push right node
-                        history.Push((node.RightNodeIndex, NotVisited, NotVisited));
-                        continue;
-                    }
-                }
-
-                // optimize!
-                var leftDepth = Math.Max(leftInfo.Item1, leftInfo.Item2) + 1;
-                var rightDepth = Math.Max(rightInfo.Item1, rightInfo.Item2) + 1;
-
-                if (leftDepth - rightDepth > 1)
-                {
-                    // left is deeper
-                    if (leftInfo.Item1 < leftInfo.Item2)
-                    {
-                        // need to pull up deeper subtree
-                        PullUpLeft(nodeIndex);
-                    }
-                    else
-                    {
-                        RotateRight(nodeIndex);
-                    }
-
-                    leftDepth--;
-                    rightDepth++;
-                }
-                else if (rightDepth - leftDepth > 1)
-                {
-                    // right is deeper
-                    if (rightInfo.Item1 > rightInfo.Item2)
-                    {
-                        // need to pull up deeper subtree
-                        PullUpRight(nodeIndex);
-                    }
-                    else
-                    {
-                        RotateLeft(nodeIndex);
-                    }
-
-                    rightDepth--;
-                    leftDepth++;
-                }
-
-                // set depth and return to parent node
-                depth = (leftDepth, rightDepth);
-                history.Pop();
-            }
-
-            TreeDepth = Math.Max(depth.Item1, depth.Item2) + 1;
-        }
-
-        public void OptimizeRecursive()
         {
             (int, int) OptRec(int rootIndex)
             {
@@ -457,7 +351,7 @@
         private record struct Node
         {
             public TKey Center;
-            public List<Interval> Intervals;
+            public int Interval;
             public int LeftNodeIndex;
             public int RightNodeIndex;
         }
@@ -467,6 +361,7 @@
             public TKey From;
             public TKey To;
             public TValue Value;
+            public int Next;
         }
     }
 }
