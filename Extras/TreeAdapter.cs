@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Benchmark
+namespace Extras
 {
-    public class TreeAdapter<TKey, TValue> : IntervalTree.IIntervalTree<TKey, TValue>
+    public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
     {
         public TreeAdapter(LightIntervalTree.IIntervalTree<TKey, TValue> lightTree)
         {

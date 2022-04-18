@@ -4,18 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Extras;
 
 namespace Tests
 {
     public class CompatibilityTests
     {
-        public static readonly string[] TreeTypes = { "original", "largesparse", "largedense" };
+        public static readonly string[] TreeTypes = { "original", "largesparse" };
 
         public IntervalTree.IIntervalTree<long, int> CreateEmptyTree(string type) => type switch
         {
             "original" => new IntervalTree.IntervalTree<long, int>(),
-            "largesparse" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>()),
-            "largedense" => new TreeAdapter<long, int>(new LightIntervalTree.LargeDenseIntervalTree<long, int>()),
+            "largesparse" => new TreeAdapter<long, int>(new LargeSparseIntervalTreeLongKey<int>()),
             _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
         };
 
@@ -376,11 +376,9 @@ namespace Tests
             }
 
             [Test]
-            //[TestCase(123)]
-            //[TestCase(234)]
-            //[TestCase(345)]
-            //[TestCase(456)]
-            public void CompareResults([Range(1, 25)] int seed)
+            public void CompareResults(
+                [Values("largesparse")] string treeType,
+                [Range(1, 25)] int seed)
             {
                 var random = new Random(seed);
 
@@ -390,32 +388,20 @@ namespace Tests
                     .ToList();
 
                 var originalTree = CreateEmptyTree("original");
-                var trees = TreeTypes
-                    .Where(t => t is not "original")
-                    .Select(t => CreateEmptyTree(t))
-                    .ToList();
+                var treeUnderTest = CreateEmptyTree(treeType);
 
                 foreach (var interval in intervals)
                 {
                     originalTree.Add(interval.From, interval.To, interval.Value);
-                    foreach (var tree in trees)
-                    {
-                        tree.Add(interval.From, interval.To, interval.Value); 
-                    }
+                    treeUnderTest.Add(interval.From, interval.To, interval.Value);
                 }
-                
+
                 for (var i = 0; i < 10_100; i++)
                 {
                     var reference = originalTree.Query(i);
-                    var results = trees
-                        .Select(t => t.Query(i))
-                        .Select(r => new HashSet<int>(r))
-                        .ToList();
+                    var result = treeUnderTest.Query(i);
 
-                    for (var j = 0; j < trees.Count; j++)
-                    {
-                        Assert.That(results[j], Is.EquivalentTo(reference), $"Result mismatch for Query({i})"); 
-                    }
+                    Assert.That(result, Is.EquivalentTo(reference), $"Result mismatch for Query: {i}, TreeType: {treeType}, Seed: {seed}");
                 }
             }
         }

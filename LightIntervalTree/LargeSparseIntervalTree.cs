@@ -5,8 +5,8 @@ namespace LightIntervalTree
     public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         where TKey : IComparable<TKey>
     {
-        private readonly List<Node> _nodes = new();
-        private readonly List<Interval> _intervals = new() { new Interval() };
+        protected readonly List<Node> _nodes = new();
+        protected readonly List<Interval> _intervals = new() { new Interval() };
         private IComparer<TKey> _comparer = Comparer<TKey>.Default;
 
         public int NodeCount => _nodes.Count;
@@ -187,7 +187,9 @@ namespace LightIntervalTree
                     if (leftInfo.Item1 < leftInfo.Item2)
                     {
                         // need to pull up deeper subtree
-                        PullUpLeft(rootIndex);
+                        //PullUpLeft(rootIndex);
+                        RotateLeft(root.LeftNodeIndex);
+                        RotateRight(rootIndex);
                         leftDepth--;
                         rightDepth++;
                     }
@@ -204,7 +206,9 @@ namespace LightIntervalTree
                     if (rightInfo.Item1 > rightInfo.Item2)
                     {
                         // need to pull up deeper subtree
-                        PullUpRight(rootIndex);
+                        //PullUpRight(rootIndex);
+                        RotateRight(root.RightNodeIndex);
+                        RotateLeft(rootIndex);
                         rightDepth--;
                         leftDepth++;
                     }
@@ -238,6 +242,44 @@ namespace LightIntervalTree
                 RightNodeIndex = node.LeftNodeIndex
             };
 
+            var prevIntervalIndex = 0;
+            var prevInterval = new Interval();
+            var intervalIndex = newRightNode.Interval;
+            while (intervalIndex is not 0)
+            {
+                var interval = _intervals[intervalIndex];
+                var next = interval.Next;
+                if (_comparer.Compare(interval.From, newRoot.Center) <= 0 &&
+                    _comparer.Compare(interval.To, newRoot.Center) >= 0)
+                {
+                    // interval must be moved to new root
+                    // remove interval from old chain
+                    if (prevIntervalIndex is 0)
+                    {
+                        // this is the first interval in the chain, must update node
+                        newRightNode.Interval = interval.Next;
+                    }
+                    else
+                    {
+                        // this is not the first interval, must update previous interval
+                        prevInterval.Next = interval.Next;
+                        _intervals[prevIntervalIndex] = prevInterval;
+                    }
+
+                    // add interval into newRoot chain
+                    interval.Next = newRoot.Interval;
+                    _intervals[intervalIndex] = interval;
+                    newRoot.Interval = intervalIndex;
+                }
+                else
+                {
+                    prevIntervalIndex = intervalIndex;
+                    prevInterval = interval;
+                }
+                
+                intervalIndex = next;
+            }
+
             _nodes[nodeIndex] = newRoot;
             _nodes[node.LeftNodeIndex] = newRightNode;
         }
@@ -257,98 +299,49 @@ namespace LightIntervalTree
                 LeftNodeIndex = node.RightNodeIndex
             };
 
+            var prevIntervalIndex = 0;
+            var prevInterval = new Interval();
+            var intervalIndex = newLeftNode.Interval;
+            while (intervalIndex is not 0)
+            {
+                var interval = _intervals[intervalIndex];
+                var next = interval.Next;
+                if (_comparer.Compare(interval.From, newRoot.Center) <= 0 &&
+                    _comparer.Compare(interval.To, newRoot.Center) >= 0)
+                {
+                    // interval must be moved to new root
+                    // remove interval from old chain
+                    if (prevIntervalIndex is 0)
+                    {
+                        // this is the first interval in the chain, must update node
+                        newLeftNode.Interval = interval.Next;
+                    }
+                    else
+                    {
+                        // this is not the first interval, must update previous interval
+                        prevInterval.Next = interval.Next;
+                        _intervals[prevIntervalIndex] = prevInterval;
+                    }
+
+                    // add interval into newRoot chain
+                    interval.Next = newRoot.Interval;
+                    _intervals[intervalIndex] = interval;
+                    newRoot.Interval = intervalIndex;
+                }
+                else
+                {
+                    prevIntervalIndex = intervalIndex;
+                    prevInterval = interval;
+                }
+
+                intervalIndex = next;
+            }
+
             _nodes[nodeIndex] = newRoot;
             _nodes[node.RightNodeIndex] = newLeftNode;
         }
 
-        private void PullUpLeft(int nodeIndex)
-        {
-            var node = _nodes[nodeIndex];
-            var leftNode = _nodes[node.LeftNodeIndex];
-            var leftRightNode = _nodes[leftNode.RightNodeIndex];
-
-            var newNode = leftRightNode with
-            {
-                RightNodeIndex = leftNode.RightNodeIndex,
-                LeftNodeIndex = node.LeftNodeIndex
-            };
-
-            var newLeftNode = leftNode with
-            {
-                RightNodeIndex = leftRightNode.LeftNodeIndex
-            };
-
-            var newRightNode = node with
-            {
-                LeftNodeIndex = leftRightNode.RightNodeIndex
-            };
-
-            _nodes[nodeIndex] = newNode;
-            _nodes[node.LeftNodeIndex] = newLeftNode;
-            _nodes[leftNode.RightNodeIndex] = newRightNode;
-        }
-
-        private void PullUpRight(int nodeIndex)
-        {
-            var node = _nodes[nodeIndex];
-            var rightNode = _nodes[node.RightNodeIndex];
-            var rightLeftNode = _nodes[rightNode.LeftNodeIndex];
-
-            var newNode = rightLeftNode with
-            {
-                LeftNodeIndex = rightNode.LeftNodeIndex,
-                RightNodeIndex = node.RightNodeIndex
-            };
-
-            var newRightNode = rightNode with
-            {
-                LeftNodeIndex = rightLeftNode.RightNodeIndex
-            };
-
-            var newLeftNode = node with
-            {
-                RightNodeIndex = rightLeftNode.LeftNodeIndex
-            };
-
-            _nodes[nodeIndex] = newNode;
-            _nodes[node.RightNodeIndex] = newRightNode;
-            _nodes[rightNode.LeftNodeIndex] = newLeftNode;
-        }
-
-#if DEBUG
-        public string FormatTree()
-        {
-            List<string> MapRec(int rootIndex)
-            {
-                if (rootIndex is -1) return new List<string>();
-
-                var root = _nodes[rootIndex];
-                var left = MapRec(root.LeftNodeIndex);
-                var right = MapRec(root.RightNodeIndex);
-
-                var leftWidth = left.Count is 0 ? 0 : left.Max(s => s.Length);
-                var rightWidth = right.Count is 0 ? 0 : right.Max(s => s.Length);
-
-                var rootString = $"{rootIndex}";
-                var rootLine = $" {new string(' ', leftWidth)}{rootString}{new string(' ', rightWidth)} ";
-                var lines = new List<string>() { rootLine };
-
-                for(var i = 0; i < Math.Max(left.Count, right.Count); i++)
-                {
-                    var l = i < left.Count ? left[i] : new string(' ', leftWidth);
-                    var r = i < right.Count ? right[i] : new string(' ', rightWidth);
-                    lines.Add($" {l}{new string(' ', rootString.Length)}{r} ");
-                }
-
-                return lines;
-            }
-
-            var ls = MapRec(0);
-            return string.Join(Environment.NewLine, ls);
-        }
-#endif
-
-        private record struct Node
+        protected record struct Node
         {
             public TKey Center;
             public int Interval;
@@ -356,7 +349,7 @@ namespace LightIntervalTree
             public int RightNodeIndex;
         }
 
-        private record struct Interval
+        protected record struct Interval
         {
             public TKey From;
             public TKey To;

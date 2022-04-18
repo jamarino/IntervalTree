@@ -1,50 +1,47 @@
-﻿const long RangeMin = 300_000_000_000;
-const long RangeMax = 700_000_000_000;
-const int RangeCount = 2_000_000;
+﻿using Cocona;
+using Extras;
 
-var random = new Random(123123);
-//var ranges = Enumerable.Range(0, RangeCount)
-//    .Select(i => random.NextInt64(RangeMin / 1000, RangeMax / 1000))
-//    .Select(i => (i * 1000, (i * 1000) + (random.Next(1, 3) * 1000) - 1, random.Next(10_000)))
-//    .ToList();
+var builder = CoconaLiteApp.CreateBuilder();
 
-//var tests = Enumerable.Range(0, 10)
-//    .Select(_ => random.NextInt64(RangeMin, RangeMax))
-//    .ToList();
+var app = builder.Build();
 
-//var tree = new IntervalTree.IntervalTree<long, int>();
-var tree = new LightIntervalTree.LargeSparseIntervalTree<long, int>();
-//var tree = new LightIntervalTree.LargeDenseIntervalTree<long, int>();
-
-//foreach (var range in ranges)
-//{
-//    tree.Add(range.Item1, range.Item2, range.Item3);
-//}
-
-for (int i = 0; i < RangeCount; i++)
+app.AddCommand("memtest", (
+    [Argument]
+    string treeType,
+    int? seed,
+    int? count,
+    long? intervalMax,
+    int? intervalStep,
+    long? intervalMaxSize
+    ) =>
 {
-    var from = random.NextInt64(RangeMin, RangeMax) / 1000 * 1000;
-    var to = from + random.Next(1, 3) * 1000;
-    var val = random.Next(10_000);
-    tree.Add(from, to, val);
-}
+    seed ??= 0;
+    count ??= 100_000;
+    intervalMax ??= 1_000_000;
+    intervalStep ??= 1_000;
+    intervalMaxSize ??= 5_000;
 
-tree.Query(0);
-//tree.Optimize();
+    IntervalTree.IIntervalTree<long, int> tree = treeType switch
+    {
+        "original" => new IntervalTree.IntervalTree<long, int>(),
+        "largesparse" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>()),
+        _ => throw new Exception($"Unknown tree type: {treeType}")
+    };
 
-//foreach (var test in tests)
-//{
-//    tree.Query(test);
-//}
+    var random = new Random(seed.Value);
 
-await Task.Delay(TimeSpan.FromSeconds(1));
+    for (int i = 0; i < count.Value; i++)
+    {
+        var from = random.NextInt64(0, intervalMax.Value) / intervalStep.Value * intervalStep.Value;
+        var to = from + random.NextInt64(1, intervalMaxSize.Value);
+        var val = random.Next(10_000);
+        tree.Add(from, to, val);
+    }
 
-var memInfo = GC.GetGCMemoryInfo();
+    tree.Query(0);
 
-//Console.WriteLine($"MemoryLoadBytes: {memInfo.MemoryLoadBytes/1024} KB");
-//Console.WriteLine($"HeapSizeBytes: {memInfo.HeapSizeBytes/1024} KB");
-Console.WriteLine($"TotalComittedBytes: {memInfo.TotalCommittedBytes/1024} KB");
-//Console.WriteLine($"GetTotalMemory: {GC.GetTotalMemory(false)/1024} KB");
+    var memInfo = GC.GetGCMemoryInfo();
+    Console.WriteLine($"TotalComittedBytes: {memInfo.TotalCommittedBytes / 1024} KB");
+});
 
-//Console.WriteLine("Press enter to terminate");
-//Console.ReadLine();
+await app.RunAsync();

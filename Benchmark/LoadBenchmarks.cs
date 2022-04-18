@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using Extras;
 
 namespace Benchmark
 {
@@ -15,9 +16,9 @@ namespace Benchmark
         private List<long> _tests = new();
         private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _preloadedTrees = new();
 
-        private readonly string[] TreeTypes = { "original", "largesparse", "largedense" };
+        private readonly string[] TreeTypes = { "original", "largesparse" };
 
-        [Params("original", "largesparse", "largedense")]
+        [Params("original", "largesparse")]
         public string TreeType { get; set; }
 
         public IntervalTree.IIntervalTree<long, int> GetEmptyTree(string type)
@@ -26,7 +27,6 @@ namespace Benchmark
             {
                 "original" => new IntervalTree.IntervalTree<long, int>(),
                 "largesparse" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>()),
-                "largedense" => new TreeAdapter<long, int>(new LightIntervalTree.LargeDenseIntervalTree<long, int>()),
                 _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
             };
         }
