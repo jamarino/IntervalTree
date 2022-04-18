@@ -365,13 +365,6 @@ public class CompatibilityTests
 
     public class OutputTests : CompatibilityTests
     {
-        private record struct Interval
-        {
-            public long From { get; set; }
-            public long To { get; set; }
-            public int Value { get; set; }
-        }
-
         [Test]
         public void CompareResults(
             [Values("largesparse")] string treeType,
