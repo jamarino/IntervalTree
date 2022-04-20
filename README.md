@@ -104,6 +104,3 @@ A few key design decisions were made to reduce the memory usage.
 1. Nodes store their intervals in linked lists
     * Nodes use indexes to point to the first interval in their list. Each interval stores an additional index pointing to the next interval (if present) to form a "linked list".
     * For sparse trees this means that the majority of nodes will be storing two ints (one in the node and one in the single interval for that node) as opposed to allocating a 1-length array and storing an 8 byte pointer to said array.
-
-
-    git remote set-url origin git@github.com:jamarino/LightIntervalTree.git
