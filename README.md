@@ -80,6 +80,10 @@ Summary;
 |      1 000 000 |              1000 |           148.7 MB |    **50.0 MB** |  **0.34** |
 |     10 000 000 |              1000 |          3959.3 MB |   **197.5 MB** |  **0.05** |
 
+## Thread Safety
+
+Concurrent reads are safe, but adding intervals requires exclusive access. It is up to the consumer to enforce synchronization controls. Consider using something like [ReaderWriterLockSlim (Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim).
+
 ## TODO list
 
 * Order intervals within nodes to optimize queries
