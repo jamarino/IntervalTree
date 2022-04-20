@@ -37,6 +37,49 @@ Testing shows that for sparse data sets, `LightIntervalTree` uses just 1/10th of
 
 Denser data sets with an average of ~5 overlaps use 1/3rd the memory compared to `RangeTree` while still offering comparable construction and query times.
 
+### Load 300 000 sparse intervals
+
+| Method |  TreeType |     Mean |    Error |   StdDev |      Gen 0 |     Gen 1 |     Gen 2 | Allocated |
+|------- |---------- |---------:|---------:|---------:|-----------:|----------:|----------:|----------:|
+|   Load |     light | 136.1 ms |  2.57 ms |  2.40 ms |   250.0000 |  250.0000 |  250.0000 |     48 MB |
+|   Load | reference | 538.0 ms | 10.32 ms | 11.47 ms | 28000.0000 | 7000.0000 | 2000.0000 |    623 MB |
+
+> Note: Allocated memory is different from memory usage. It describes to total amount of memory written, not how much was ultimately kept.
+
+###  Query trees of 100 000 intervals
+
+| Method |  TreeType |   DataType |     Mean |    Error |   StdDev |
+|------- |---------- |----------- |---------:|---------:|---------:|
+|  Query |     light |      dense | 825.7 ns | 16.37 ns | 20.11 ns |
+|  Query |     light |     sparse | 239.7 ns |  4.61 ns |  4.93 ns |
+|  Query | reference |      dense | 918.4 ns | 17.37 ns | 17.06 ns |
+|  Query | reference |     sparse | 460.4 ns |  8.60 ns |  8.04 ns |
+
+### Memory usage
+
+In order to gauge real-world memory performance, this repository includes a `TestConsole` project which allows instantiating a tree with several parameters and print out the current memory usage. It is used by running:
+
+```sh
+> ./TestConsole.exe memtest light --count 1000000 --interval-step 1 --interval-max 10000 --interval-max-size 2000
+TotalComittedBytes: 49720 KB
+> ./TestConsole.exe memtest reference --count 1000000 --interval-step 1 --interval-max 10000 --interval-max-size 2000
+TotalComittedBytes: 235776 KB
+```
+
+In short, the console generates `--count` number of random intervals and adds them to either a `reference` tree (RangeTree) or a `light` tree (LightIntervalTree). The other parameters control the maximum starting coordinate of the intervals `--interval-max` (random 0 to max), the maximum size of the intervals `--interval-max-size` (random 1 to max), and the alignment of the intervals in steps `--interval-step` (i.e. step X means all starting coordinates are integer divisible by X).
+
+The following was run with a `--interval-step 1` and an `--interval-max 1000000`.
+
+Summary;
+| Interval Count | Interval Max Size | Memory (Reference) | Memory (Light) |     Ratio |
+|---------------:|------------------:|-------------------:|---------------:|----------:|
+|        100 000 |               100 |            35.7 MB |     **8.2 MB** |  **0.23** |
+|      1 000 000 |               100 |           190.3 MB |    **29.7 MB** |  **0.16** |
+|     10 000 000 |               100 |          2595.7 MB |   **203.6 MB** |  **0.08** |
+|        100 000 |              1000 |            30.2 MB |     **4.0 MB** |  **0.13** |
+|      1 000 000 |              1000 |           148.7 MB |    **50.0 MB** |  **0.34** |
+|     10 000 000 |              1000 |          3959.3 MB |   **197.5 MB** |  **0.05** |
+
 ## TODO list
 
 * Order intervals within nodes to optimize queries
@@ -61,3 +104,6 @@ A few key design decisions were made to reduce the memory usage.
 1. Nodes store their intervals in linked lists
     * Nodes use indexes to point to the first interval in their list. Each interval stores an additional index pointing to the next interval (if present) to form a "linked list".
     * For sparse trees this means that the majority of nodes will be storing two ints (one in the node and one in the single interval for that node) as opposed to allocating a 1-length array and storing an 8 byte pointer to said array.
+
+
+    git remote set-url origin git@github.com:jamarino/LightIntervalTree.git
