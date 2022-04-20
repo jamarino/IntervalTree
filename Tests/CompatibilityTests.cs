@@ -7,12 +7,13 @@ namespace Tests;
 
 public class CompatibilityTests
 {
-    public static readonly string[] TreeTypes = { "original", "largesparse" };
+    public static readonly string[] TreeTypes = { "original", "largesparse", "balanced" };
 
     public IntervalTree.IIntervalTree<long, int> CreateEmptyTree(string type) => type switch
     {
         "original" => new IntervalTree.IntervalTree<long, int>(),
         "largesparse" => new TreeAdapter<long, int>(new LargeSparseIntervalTreeLongKey<int>()),
+        "balanced" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseBalancedIntervalTree<long, int>()),
         _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
     };
 
@@ -367,7 +368,7 @@ public class CompatibilityTests
     {
         [Test]
         public void CompareResults(
-            [Values("largesparse")] string treeType,
+            [Values("largesparse", "balanced")] string treeType,
             [Range(1, 25)] int seed)
         {
             var random = new Random(seed);

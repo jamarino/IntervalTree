@@ -11,9 +11,9 @@ public class LoadBenchmarks
     private List<long> _tests = new();
     private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _preloadedTrees = new();
 
-    private readonly string[] TreeTypes = { "original", "largesparse" };
+    private readonly string[] TreeTypes = { "original", "largesparse", "balanced" };
 
-    [Params("original", "largesparse")]
+    [Params("original", "largesparse", "balanced")]
     public string TreeType { get; set; } = string.Empty;
 
     public IntervalTree.IIntervalTree<long, int> GetEmptyTree(string type)
@@ -22,6 +22,7 @@ public class LoadBenchmarks
         {
             "original" => new IntervalTree.IntervalTree<long, int>(),
             "largesparse" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>()),
+            "balanced" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseBalancedIntervalTree<long, int>()),
             _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
         };
     }
