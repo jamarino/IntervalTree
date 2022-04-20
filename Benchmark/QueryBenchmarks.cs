@@ -10,7 +10,7 @@ public class QueryBenchmarks
     private Dictionary<string, IEnumerable<Interval>> _dataCache = new();
 
 
-    [Params("original", "largesparse", "balanced")]
+    [Params("reference", "light")]
     public string TreeType { get; set; } = string.Empty;
 
     [Params("sparse", "dense", "ascending", "descending")]
@@ -26,9 +26,8 @@ public class QueryBenchmarks
 
         IntervalTree.IIntervalTree<long, int> tree = treeType switch
         {
-            "original" => new IntervalTree.IntervalTree<long, int>(),
-            "largesparse" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>()),
-            "balanced" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseBalancedIntervalTree<long, int>()),
+            "reference" => new IntervalTree.IntervalTree<long, int>(),
+            "light" => new TreeAdapter<long, int>(new LightIntervalTree.LightIntervalTree<long, int>()),
             _ => throw new ArgumentException(nameof(treeType))
         };
 

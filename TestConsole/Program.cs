@@ -23,9 +23,8 @@ app.AddCommand("memtest", (
 
     IntervalTree.IIntervalTree<long, int> tree = treeType switch
     {
-        "original" => new IntervalTree.IntervalTree<long, int>(),
-        "largesparse" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseIntervalTree<long, int>()),
-        "balanced" => new TreeAdapter<long, int>(new LightIntervalTree.LargeSparseBalancedIntervalTree<long, int>()),
+        "reference" => new IntervalTree.IntervalTree<long, int>(),
+        "light" => new TreeAdapter<long, int>(new LightIntervalTree.LightIntervalTree<long, int>()),
         _ => throw new Exception($"Unknown tree type: {treeType}")
     };
 

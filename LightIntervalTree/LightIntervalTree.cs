@@ -1,8 +1,6 @@
-﻿using System.Numerics;
+﻿namespace LightIntervalTree;
 
-namespace LightIntervalTree;
-
-public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
+public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
     protected readonly List<Node> _nodes = new();
@@ -13,15 +11,18 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public int Count { get; private set; }
 
-    public int TreeDepth { get; private set; }
-
     public void Add(TKey from, TKey to, TValue value)
     {
         Count++;
 
-        if (_nodes.Count == 0)
+        RecursiveAdd(0, 1, from, to, value);
+    }
+
+    private bool RecursiveAdd(int nodeIndex, int depth, TKey from, TKey to, TValue value)
+    {
+        if (nodeIndex >= _nodes.Count)
         {
-            // insert root
+            // new node
             _nodes.Add(new Node
             {
                 Center = from,
@@ -36,40 +37,11 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 To = to,
                 Value = value
             });
-
-            TreeDepth = 1;
-            return;
+            return true;
         }
 
-        RecursiveAdd(0, 1, from, to, value);
-
-        if (TreeDepth > 2 * BitOperations.Log2((uint)_nodes.Count))
-            Optimize();
-    }
-
-    private void RecursiveAdd(int nodeIndex, int depth, TKey from, TKey to, TValue value)
-    {
-        var node = nodeIndex < _nodes.Count ? _nodes[nodeIndex] : default;
-
-        if (node == default)
-        {
-            // new node
-            node.Center = from;
-            node.LeftNodeIndex = -1;
-            node.RightNodeIndex = -1;
-            node.Interval = _intervals.Count;
-            _nodes.Add(node);
-
-            _intervals.Add(new Interval
-            {
-                From = from,
-                To = to,
-                Value = value
-            });
-
-            TreeDepth = Math.Max(TreeDepth, depth);
-            return;
-        }
+        var node = _nodes[nodeIndex];
+        var initialNodeBalance = node.Balance;
 
         var compareTo = _comparer.Compare(to, node.Center);
         var compareFrom = _comparer.Compare(from, node.Center);
@@ -77,55 +49,181 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (compareTo < 0)
         {
             // recurse left
-            var leftNodeIndex = node.LeftNodeIndex;
-            if (leftNodeIndex == -1)
+            if (node.LeftNodeIndex == -1)
             {
-                leftNodeIndex = _nodes.Count;
-                node.LeftNodeIndex = leftNodeIndex;
+                node.LeftNodeIndex = _nodes.Count;
             }
 
-            RecursiveAdd(leftNodeIndex, depth+1, from, to, value);
+            var heightIncreased = RecursiveAdd(node.LeftNodeIndex, depth+1, from, to, value);
+            if (heightIncreased)
+                node.Balance--;
         }
         else if (compareFrom > 0)
         {
             // recurse right
-            var rightNodeIndex = node.RightNodeIndex;
-            if (rightNodeIndex == -1)
+            if (node.RightNodeIndex == -1)
             {
-                rightNodeIndex = _nodes.Count;
-                node.RightNodeIndex = rightNodeIndex;
+                node.RightNodeIndex = _nodes.Count;
             }
 
-            RecursiveAdd(rightNodeIndex, depth+1, from, to, value);
+            var heightIncreased = RecursiveAdd(node.RightNodeIndex, depth+1, from, to, value);
+            if (heightIncreased)
+                node.Balance++;
         }
         else
         {
             // add to current node
             // TODO insert in ascending order
-            var intervalIndex = node.Interval;
-            var interval = _intervals[intervalIndex];
-
-            while (true)
-            {
-                if (interval.Next is 0) break;
-                intervalIndex = interval.Next;
-                interval = _intervals[intervalIndex];
-            }
-
             _intervals.Add(new Interval
             {
                 From = from,
                 To = to,
-                Value = value
+                Value = value,
+                Next = node.Interval
             });
-
-            _intervals[intervalIndex] = interval with
-            {
-                Next = _intervals.Count - 1
-            };
+            node.Interval = _intervals.Count - 1;
         }
 
+        // update node
         _nodes[nodeIndex] = node;
+
+        // balance
+        if (node.Balance < -1)
+        {
+            // left is too deep
+            var left = _nodes[node.LeftNodeIndex];
+            if (left.Balance <= 0)
+            {
+                // subtree is balanced or deeper on left side
+                BalanceLeftLeft(nodeIndex);
+            }
+            else
+            {
+                // subtree is deeper on the right
+                BalanceLeftRight(nodeIndex);
+            }
+        }
+        else if (node.Balance > 1)
+        {
+            // right is too deep
+            var right = _nodes[node.RightNodeIndex];
+            if (right.Balance >= 0)
+            {
+                // subtree is balanced or deeper on right side
+                BalanceRightRight(nodeIndex);
+            }
+            else
+            {
+                // subtree is deeper on the left
+                BalanceRightLeft(nodeIndex);
+            }
+        }
+
+        // reload node in case of rotations
+        node = _nodes[nodeIndex];
+
+        // return true if the node balance has changed and is not 0
+        return node.Balance != initialNodeBalance && node.Balance is not 0;
+    }
+
+    private void BalanceRightRight(int rootIndex)
+    {
+        RotateLeft(rootIndex);
+
+        // update balance
+        // note that child is now on the left
+        var root = _nodes[rootIndex];
+        var child = _nodes[root.LeftNodeIndex];
+
+        root.Balance = 0;
+        child.Balance = 0;
+
+        _nodes[rootIndex] = root;
+        _nodes[root.LeftNodeIndex] = child;
+
+        PromoteIntervals(rootIndex, root.LeftNodeIndex);
+    }
+
+    private void BalanceLeftLeft(int rootIndex)
+    {
+        RotateRight(rootIndex);
+
+        // update balance
+        // note that child is new on the right
+        var root = _nodes[rootIndex];
+        var child = _nodes[root.RightNodeIndex];
+
+        root.Balance = 0;
+        child.Balance = 0;
+
+        _nodes[rootIndex] = root;
+        _nodes[root.RightNodeIndex] = child;
+
+        PromoteIntervals(rootIndex, root.RightNodeIndex);
+    }
+
+    private void BalanceRightLeft(int rootIndex)
+    {
+        // see: https://en.wikipedia.org/wiki/AVL_tree#:~:text=of%20rotated%20subtree%0A%7D-,Double%20rotation,-%5Bedit%5D
+
+        var oldRoot = _nodes[rootIndex];
+        RotateRight(oldRoot.RightNodeIndex);
+        RotateLeft(rootIndex);
+
+        var y = _nodes[rootIndex];
+        var x = _nodes[y.LeftNodeIndex];
+        var z = _nodes[y.RightNodeIndex];
+
+        if (y.Balance > 0)
+        {
+            x.Balance = -1;
+            z.Balance = 0;
+        }
+        else
+        {
+            x.Balance = 0;
+            z.Balance = 1;
+        }
+        y.Balance = 0;
+
+        _nodes[rootIndex] = y;
+        _nodes[y.LeftNodeIndex] = x;
+        _nodes[y.RightNodeIndex] = z;
+
+        PromoteIntervals(rootIndex, y.RightNodeIndex);
+        PromoteIntervals(rootIndex, y.LeftNodeIndex);
+    }
+
+    private void BalanceLeftRight(int rootIndex)
+    {
+        // see: https://en.wikipedia.org/wiki/AVL_tree#:~:text=of%20rotated%20subtree%0A%7D-,Double%20rotation,-%5Bedit%5D
+
+        var oldRoot = _nodes[rootIndex];
+        RotateLeft(oldRoot.LeftNodeIndex);
+        RotateRight(rootIndex);
+
+        var y = _nodes[rootIndex];
+        var x = _nodes[y.RightNodeIndex];
+        var z = _nodes[y.LeftNodeIndex];
+
+        if (y.Balance < 0)
+        {
+            x.Balance = -1;
+            z.Balance = 0;
+        }
+        else
+        {
+            x.Balance = 0;
+            z.Balance = 1;
+        }
+        y.Balance = 0;
+
+        _nodes[rootIndex] = y;
+        _nodes[y.RightNodeIndex] = x;
+        _nodes[y.LeftNodeIndex] = z;
+
+        PromoteIntervals(rootIndex, y.RightNodeIndex);
+        PromoteIntervals(rootIndex, y.LeftNodeIndex);
     }
 
     public IEnumerable<TValue> Query(TKey target)
@@ -137,17 +235,17 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         var node = _nodes[0];
         while (true)
         {
-            var interval = _intervals[node.Interval];
-            while (true)
+            var intervalIndex = node.Interval;
+            while (intervalIndex is not 0)
             {
+                var interval = _intervals[intervalIndex];
                 if (_comparer.Compare(target, interval.From) >= 0 &&
                     _comparer.Compare(target, interval.To) <= 0)
                 {
                     // target is in interval
                     results.Add(interval.Value);
                 }
-                if (interval.Next is 0) break;
-                interval = _intervals[interval.Next];
+                intervalIndex = interval.Next;
             }
 
             if (_comparer.Compare(target, node.Center) == 0) break;
@@ -224,7 +322,6 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         }
 
         var (l, r) = OptRec(0);
-        TreeDepth = Math.Max(l, r) + 1;
     }
 
     private void RotateRight(int nodeIndex)
@@ -242,50 +339,15 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             RightNodeIndex = node.LeftNodeIndex
         };
 
-        var prevIntervalIndex = 0;
-        var prevInterval = new Interval();
-        var intervalIndex = newRightNode.Interval;
-        while (intervalIndex is not 0)
-        {
-            var interval = _intervals[intervalIndex];
-            var next = interval.Next;
-            if (_comparer.Compare(interval.From, newRoot.Center) <= 0 &&
-                _comparer.Compare(interval.To, newRoot.Center) >= 0)
-            {
-                // interval must be moved to new root
-                // remove interval from old chain
-                if (prevIntervalIndex is 0)
-                {
-                    // this is the first interval in the chain, must update node
-                    newRightNode.Interval = interval.Next;
-                }
-                else
-                {
-                    // this is not the first interval, must update previous interval
-                    prevInterval.Next = interval.Next;
-                    _intervals[prevIntervalIndex] = prevInterval;
-                }
-
-                // add interval into newRoot chain
-                interval.Next = newRoot.Interval;
-                _intervals[intervalIndex] = interval;
-                newRoot.Interval = intervalIndex;
-            }
-            else
-            {
-                prevIntervalIndex = intervalIndex;
-                prevInterval = interval;
-            }
-            
-            intervalIndex = next;
-        }
-
         _nodes[nodeIndex] = newRoot;
         _nodes[node.LeftNodeIndex] = newRightNode;
+
+        PromoteIntervals(nodeIndex, node.LeftNodeIndex);
     }
 
     private void RotateLeft(int nodeIndex)
     {
+        // create new nodes
         var node = _nodes[nodeIndex];
         var rightNode = _nodes[node.RightNodeIndex];
 
@@ -299,9 +361,24 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             LeftNodeIndex = node.RightNodeIndex
         };
 
+        // TODO update balance of nodes
+
+        // save new nodes
+        _nodes[nodeIndex] = newRoot;
+        _nodes[node.RightNodeIndex] = newLeftNode;
+
+        PromoteIntervals(nodeIndex, node.RightNodeIndex);
+    }
+
+    private void PromoteIntervals(int newRootNodeIndex, int newChildNodeIndex)
+    {
+        var newRoot = _nodes[newRootNodeIndex];
+        var newChild = _nodes[newChildNodeIndex];
+
+        // move up intervals that overlap with new root node
         var prevIntervalIndex = 0;
         var prevInterval = new Interval();
-        var intervalIndex = newLeftNode.Interval;
+        var intervalIndex = newChild.Interval;
         while (intervalIndex is not 0)
         {
             var interval = _intervals[intervalIndex];
@@ -314,7 +391,7 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 if (prevIntervalIndex is 0)
                 {
                     // this is the first interval in the chain, must update node
-                    newLeftNode.Interval = interval.Next;
+                    newChild.Interval = interval.Next;
                 }
                 else
                 {
@@ -337,8 +414,8 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             intervalIndex = next;
         }
 
-        _nodes[nodeIndex] = newRoot;
-        _nodes[node.RightNodeIndex] = newLeftNode;
+        _nodes[newRootNodeIndex] = newRoot;
+        _nodes[newChildNodeIndex] = newChild;
     }
 
     protected record struct Node
@@ -347,6 +424,7 @@ public class LargeSparseIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         public int Interval;
         public int LeftNodeIndex;
         public int RightNodeIndex;
+        public sbyte Balance;
     }
 
     protected record struct Interval
