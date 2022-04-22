@@ -1,0 +1,4 @@
+*.cs text=auto eol=lf
+*.csproj text=auto eol=lf
+*.sln text=auto eol=lf
+*.md text=auto eol=lf
