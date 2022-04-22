@@ -87,7 +87,6 @@ Concurrent reads are safe, but adding intervals requires exclusive access. It is
 ## TODO list
 
 * Order intervals within nodes to optimize queries
-* Add property for enumerating intervals
 * Add method for querying a range
 * Create a light-er class using shorts for internal indecies
 * Consider storing reverse-ordered intervals within nodes to further optimize queries
