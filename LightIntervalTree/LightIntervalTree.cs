@@ -1,4 +1,4 @@
-﻿namespace LightIntervalTree;
+namespace LightIntervalTree;
 
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
@@ -10,6 +10,11 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     public int NodeCount => _nodes.Count;
 
     public int Count { get; private set; }
+
+    public IEnumerable<TValue> Values => 
+        _intervals
+        .Skip(1) // skip the 'null' interval
+        .Select(i => i.Value);
 
     public void Add(TKey from, TKey to, TValue value)
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using IntervalTree;
@@ -12,7 +12,7 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
         LightTree = lightTree;
     }
 
-    public IEnumerable<TValue> Values => throw new NotImplementedException();
+    public IEnumerable<TValue> Values => LightTree.Values;
 
     public int Count => LightTree.Count;
 

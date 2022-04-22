@@ -1,5 +1,6 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Extras;
 
@@ -360,6 +361,79 @@ public class CompatibilityTests
             var results = tree.Query(75);
 
             Assert.That(results.Count, Is.EqualTo(0));
+        }
+    }
+
+    public class EnumeratingTreeValues : CompatibilityTests
+    {
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void OfAEmptyTree_ShouldYield0Values(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+
+            var values = tree.Values;
+
+            Assert.That(values.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void OfATreeWith1Interval_ShouldYield1Value(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            tree.Add(1, 2, 1);
+
+            var values = tree.Values;
+
+            Assert.That(values.Count, Is.EqualTo(1));
+            Assert.That(values, Is.EquivalentTo(Enumerable.Range(1, 1)));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void OfATreeWith10Intervals_ShouldYield10Values(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            for (int i = 0; i < 10; i++)
+            {
+                tree.Add(i, i + 1, i);
+            }
+
+            var values = tree.Values;
+
+            Assert.That(values.Count, Is.EqualTo(10));
+            Assert.That(values, Is.EquivalentTo(Enumerable.Range(0, 10)));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void OfATreeWithDuplicateValues_ShouldYieldDuplicateValues(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            tree.Add(1, 2, 1);
+            tree.Add(2, 3, 1);
+            tree.Add(3, 4, 1);
+
+            var values = tree.Values;
+
+            Assert.That(values.Count, Is.EqualTo(3));
+            Assert.That(values, Is.EquivalentTo(new List<int>() { 1, 1, 1 }));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void OfATreeWithDuplicateIntervals_ShouldYieldDuplicateValues(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            tree.Add(1, 2, 1);
+            tree.Add(1, 2, 1);
+            tree.Add(1, 2, 1);
+
+            var values = tree.Values;
+
+            Assert.That(values.Count, Is.EqualTo(3));
+            Assert.That(values, Is.EquivalentTo(new List<int>() { 1, 1, 1 }));
         }
     }
 
