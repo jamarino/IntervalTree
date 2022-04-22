@@ -5,8 +5,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>10</LangVersion>
+        
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>LightIntervalTree</PackageId>
+        <Version>1.0.0-alpha</Version>
         <Authors>Jonathan Marino</Authors>
+        <Description>Interval tree implementation focused on memory efficiency. Similar to the RangeTree implementation, but uses as little as &lt;10% of the memory in comparison.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/jamarino/LightIntervalTree</PackageProjectUrl>
+        <PackageTags>light interval tree intervaltree rangetree</PackageTags>
     </PropertyGroup>
 
 </Project>

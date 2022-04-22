@@ -1,5 +1,10 @@
 # Changelog
 
+## Pending publishing
+
+Added:
+* Added nuget description, project URL, tags and more
+
 ## v0.2.0 - 2022/04/22
 
 Added:
