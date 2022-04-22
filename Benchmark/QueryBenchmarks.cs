@@ -1,5 +1,6 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
 using Extras;
+using LightIntervalTree;
 
 namespace Benchmark;
 
@@ -7,7 +8,7 @@ public class QueryBenchmarks
 {
     const int IntervalCount = 100_000;
     private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _treeCache = new();
-    private Dictionary<string, IEnumerable<Interval>> _dataCache = new();
+    private Dictionary<string, IEnumerable<Interval<long, int>>> _dataCache = new();
 
 
     [Params("reference", "light")]
@@ -52,11 +53,10 @@ public class QueryBenchmarks
             .Select(_ =>
             {
                 var start = random.Next(10*IntervalCount);
-                return new Interval
-                {
-                    From = start,
-                    To = start + random.Next(1, 20),
-                };
+                return new Interval<long, int>(
+                    start,
+                    start + random.Next(1, 20),
+                    1);
             })
             .ToList();
         _dataCache["sparse"] = sparse;
@@ -65,11 +65,10 @@ public class QueryBenchmarks
             .Select(_ =>
             {
                 var start = random.Next(10*IntervalCount);
-                return new Interval
-                {
-                    From = start,
-                    To = start + random.Next(5, 200),
-                };
+                return new Interval<long, int>(
+                    start,
+                    start + random.Next(5, 200),
+                    1);
             })
             .ToList();
         _dataCache["dense"] = dense;

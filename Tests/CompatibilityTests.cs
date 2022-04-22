@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Extras;
+using LightIntervalTree;
 
 namespace Tests;
 
@@ -13,7 +14,7 @@ public class CompatibilityTests
     public IntervalTree.IIntervalTree<long, int> CreateEmptyTree(string type) => type switch
     {
         "reference" => new IntervalTree.IntervalTree<long, int>(),
-        "light" => new TreeAdapter<long, int>(new LightIntervalTree.LightIntervalTree<long, int>()),
+        "light" => new TreeAdapter<long, int>(new LightIntervalTree<long, int>()),
         _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
     };
 
@@ -437,6 +438,69 @@ public class CompatibilityTests
         }
     }
 
+    public class Enumerating : CompatibilityTests
+    {
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void AnEmptyTree_ShouldYield0Intervals(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+
+            var intervals = tree.ToList();
+
+            Assert.That(intervals.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void ATreeWith1Interval_ShouldYield1Interval(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            tree.Add(1, 2, 1);
+
+            var intervals = tree.ToList();
+
+            Assert.That(intervals.Count, Is.EqualTo(1));
+            Assert.That(intervals, Is.EquivalentTo(new List<IntervalTree.RangeValuePair<long, int>> { new IntervalTree.RangeValuePair<long, int>(1, 2, 1) }));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void ATreeWith10Intervals_ShouldYield10Intervals(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            var expectedIntervals = 
+                Enumerable.Range(0, 10)
+                    .Select(i => new IntervalTree.RangeValuePair<long, int>(i, i + 1, i))
+                    .ToList();
+
+            foreach(var interval in expectedIntervals)
+            {
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            var intervals = tree.ToList();
+
+            Assert.That(intervals.Count, Is.EqualTo(10));
+            Assert.That(intervals, Is.EquivalentTo(expectedIntervals));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TreeTypes))]
+        public void ATreeWithDuplicateIntervals_ShouldYieldDuplicateValues(string treeType)
+        {
+            var tree = CreateEmptyTree(treeType);
+            tree.Add(1, 2, 1);
+            tree.Add(1, 2, 1);
+            tree.Add(1, 2, 1);
+
+            var intervals = tree.ToList();
+
+            Assert.That(intervals.Count, Is.EqualTo(3));
+            Assert.That(intervals, Is.EquivalentTo(Enumerable.Range(0, 3).Select(_ => new IntervalTree.RangeValuePair<long, int>(1, 2, 1))));
+        }
+    }
+
     public class OutputTests : CompatibilityTests
     {
         [Test]
@@ -448,7 +512,7 @@ public class CompatibilityTests
 
             var intervals = Enumerable.Range(0, 16)
                 .Select(_ => random.NextInt64(0, 100))
-                .Select((from, i) => new Interval { From = from, To = from + random.Next(1, 10), Value = i })
+                .Select((from, i) => new Interval<long, int>(from, from + random.Next(1, 10), i))
                 .ToList();
 
             var originalTree = CreateEmptyTree("reference");

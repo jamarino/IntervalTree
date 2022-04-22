@@ -1,6 +1,6 @@
 namespace LightIntervalTree;
 
-public interface IIntervalTree<TKey,TValue>
+public interface IIntervalTree<TKey,TValue> : IEnumerable<Interval<TKey, TValue>>
 {
     int Count { get; }
 

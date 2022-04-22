@@ -1,13 +1,13 @@
+using System.Collections;
+
 namespace LightIntervalTree;
 
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
     protected readonly List<Node> _nodes = new();
-    protected readonly List<Interval> _intervals = new() { new Interval() };
-    private IComparer<TKey> _comparer = Comparer<TKey>.Default;
-
-    public int NodeCount => _nodes.Count;
+    protected readonly List<LinkedInterval> _intervals = new() { new LinkedInterval() };
+    private readonly IComparer<TKey> _comparer = Comparer<TKey>.Default;
 
     public int Count { get; private set; }
 
@@ -15,6 +15,14 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         _intervals
         .Skip(1) // skip the 'null' interval
         .Select(i => i.Value);
+
+    public IEnumerator<Interval<TKey, TValue>> GetEnumerator() =>
+        _intervals
+            .Skip(1)
+            .Select(i => new Interval<TKey, TValue>(i.From, i.To, i.Value))
+            .GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public void Add(TKey from, TKey to, TValue value)
     {
@@ -36,7 +44,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 Interval = _intervals.Count
             });
 
-            _intervals.Add(new Interval
+            _intervals.Add(new LinkedInterval
             {
                 From = from,
                 To = to,
@@ -79,7 +87,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         {
             // add to current node
             // TODO insert in ascending order
-            _intervals.Add(new Interval
+            _intervals.Add(new LinkedInterval
             {
                 From = from,
                 To = to,
@@ -382,7 +390,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
         // move up intervals that overlap with new root node
         var prevIntervalIndex = 0;
-        var prevInterval = new Interval();
+        var prevInterval = new LinkedInterval();
         var intervalIndex = newChild.Interval;
         while (intervalIndex is not 0)
         {
@@ -432,7 +440,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         public sbyte Balance;
     }
 
-    protected record struct Interval
+    protected record struct LinkedInterval
     {
         public TKey From;
         public TKey To;

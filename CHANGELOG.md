@@ -1,9 +1,10 @@
 # Changelog
 
-## v0.2.0 - Not yet released
+## v0.2.0 - 2022/04/22
 
 Added:
 * Property `Values` to allow enumeration of all current values
+* `IIntervalTree<TKey,TValue>` now implements `IEnumerable<Interval<TKey,TValue>>`
 
 ## v0.1.0 - 2022/04/20
 

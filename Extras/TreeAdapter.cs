@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using IntervalTree;
 
 namespace Extras;
@@ -18,25 +19,19 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public LightIntervalTree.IIntervalTree<TKey, TValue> LightTree { get; }
 
-    public void Add(TKey from, TKey to, TValue value)
-    {
-        LightTree.Add(from, to, value);
-    }
+    public void Add(TKey from, TKey to, TValue value) => LightTree.Add(from, to, value);
 
     public void Clear()
     {
         throw new NotImplementedException();
     }
 
-    public IEnumerator<RangeValuePair<TKey, TValue>> GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
+    public IEnumerator<RangeValuePair<TKey, TValue>> GetEnumerator() => 
+        LightTree
+            .Select(i => new RangeValuePair<TKey, TValue>(i.From, i.To, i.Value))
+            .GetEnumerator();
 
-    public IEnumerable<TValue> Query(TKey value)
-    {
-        return LightTree.Query(value);
-    }
+    public IEnumerable<TValue> Query(TKey value) => LightTree.Query(value);
 
     public IEnumerable<TValue> Query(TKey from, TKey to)
     {
@@ -53,8 +48,5 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
         throw new NotImplementedException();
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
