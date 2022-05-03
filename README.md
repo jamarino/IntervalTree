@@ -70,7 +70,6 @@ In short, the console generates `--count` number of random intervals and adds th
 
 The following was run with a `--interval-step 1` and an `--interval-max 1000000`.
 
-Summary;
 | Interval Count | Interval Max Size | Memory (Reference) | Memory (Light) |     Ratio |
 |---------------:|------------------:|-------------------:|---------------:|----------:|
 |        100 000 |               100 |            35.7 MB |     **8.2 MB** |  **0.23** |
@@ -100,7 +99,7 @@ A few key design decisions were made to reduce the memory usage.
     * `RangeTree` keeps a full copy of intervals, in case the tree needs to be rebuilt following the addition or removal of an interval. `LightIntervalTree` only stores intervals as part of the underlying tree structure.
 1. Model tree nodes as value types (`struct`) rather than objects (`class`)
     * Objects suffer memory overhead in the form of type and method information
-    * Since `struct`s cannot reference themselves and index (`int`) is used to reference other nodes
+    * Since `struct`s cannot reference themselves an index (`int`) is used to reference other nodes
 1. Store nodes and intervals in indexable lists, use indexes rather than references as pointers
     * Pointers in 64-bit systems take up 8 bytes of storage, `int`s only take 4 bytes
     * Storing value types in Lists/Arrays may improve CPU caching since elements are co-located
