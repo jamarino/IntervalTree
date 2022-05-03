@@ -9,22 +9,13 @@ namespace Tests;
 
 public class CompatibilityTests
 {
-    public static readonly string[] TreeTypes = { "reference", "light" };
-
-    public IntervalTree.IIntervalTree<long, int> CreateEmptyTree(string type) => type switch
-    {
-        "reference" => new IntervalTree.IntervalTree<long, int>(),
-        "light" => new TreeAdapter<long, int>(new LightIntervalTree<long, int>()),
-        _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
-    };
-
     public class AnEmptyTree : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueried_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
             var results = tree.Query(0);
 
@@ -32,19 +23,19 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenAddedTo_DoesNotExplode(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
             Assert.DoesNotThrow(() => tree.Add(10, 20, 1));
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenAddedTo_IncreasesCountTo1(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
             tree.Add(10, 20, 1);
 
@@ -55,10 +46,10 @@ public class CompatibilityTests
     public class ATreeWithOneInterval : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInInterval_ReturnsMatch(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
 
             var results = tree.Query(15);
@@ -68,10 +59,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedAtFromValue_ReturnsMatch(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
 
             var results = tree.Query(10);
@@ -81,10 +72,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedAtToValue_ReturnsMatch(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
 
             var results = tree.Query(19);
@@ -94,10 +85,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedBeforeFromValue_Returns0Matches(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
 
             var results = tree.Query(9);
@@ -106,10 +97,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedAfterToValue_Returns0Matches(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
 
             var results = tree.Query(20);
@@ -121,10 +112,10 @@ public class CompatibilityTests
     public class ATreeWithTwoDisjointIntervals : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void HasACountOfTwo(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
             tree.Add(50, 59, 2);
 
@@ -132,10 +123,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInFirstInterval_ReturnsValueOfFirstInterval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
             tree.Add(50, 59, 2);
 
@@ -146,10 +137,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInSecondInterval_ReturnsValueOfSecondInterval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
             tree.Add(50, 59, 2);
 
@@ -160,10 +151,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedBeforeFirstInterval_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
             tree.Add(50, 59, 2);
 
@@ -173,10 +164,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedBetweenIntervals_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
             tree.Add(50, 59, 2);
 
@@ -186,10 +177,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedAfterSecondInterval_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
             tree.Add(50, 59, 2);
 
@@ -202,10 +193,10 @@ public class CompatibilityTests
     public class ATreeWithTwoPatiallyOverlappingIntervals : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void HasACountOfTwo(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 29, 1);
             tree.Add(20, 39, 2);
 
@@ -213,10 +204,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInFirstInterval_ReturnsValueOfFirstInterval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 29, 1);
             tree.Add(20, 39, 2);
 
@@ -227,10 +218,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInSecondInterval_ReturnsValueOfSecondInterval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 29, 1);
             tree.Add(20, 39, 2);
 
@@ -241,10 +232,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedBeforeFirstInterval_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 29, 1);
             tree.Add(20, 39, 2);
 
@@ -254,10 +245,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInOverlap_ReturnsBothIntervalValues(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 29, 1);
             tree.Add(20, 39, 2);
 
@@ -269,10 +260,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedAfterSecondInterval_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 29, 1);
             tree.Add(20, 39, 2);
 
@@ -285,10 +276,10 @@ public class CompatibilityTests
     public class ATreeWithTwoCompletelyOverlappingIntervals : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void HasACountOfTwo(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 49, 1);
             tree.Add(20, 39, 2);
 
@@ -296,10 +287,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInFirstIntervalBeforeSecondInterval_ReturnsValueOfFirstInterval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 49, 1);
             tree.Add(20, 39, 2);
 
@@ -310,10 +301,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInFirstIntervalAfterSecondInterval_ReturnsValueOfFirstInterval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 49, 1);
             tree.Add(20, 39, 2);
 
@@ -324,10 +315,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedBeforeFirstInterval_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 49, 1);
             tree.Add(20, 39, 2);
 
@@ -337,10 +328,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInOverlap_ReturnsBothIntervalValues(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 49, 1);
             tree.Add(20, 39, 2);
 
@@ -352,10 +343,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedAfterFirstInterval_Returns0Results(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 49, 1);
             tree.Add(20, 39, 2);
 
@@ -368,10 +359,10 @@ public class CompatibilityTests
     public class EnumeratingTreeValues : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void OfAEmptyTree_ShouldYield0Values(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
             var values = tree.Values;
 
@@ -379,10 +370,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void OfATreeWith1Interval_ShouldYield1Value(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(1, 2, 1);
 
             var values = tree.Values;
@@ -392,10 +383,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void OfATreeWith10Intervals_ShouldYield10Values(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             for (int i = 0; i < 10; i++)
             {
                 tree.Add(i, i + 1, i);
@@ -408,10 +399,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void OfATreeWithDuplicateValues_ShouldYieldDuplicateValues(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(1, 2, 1);
             tree.Add(2, 3, 1);
             tree.Add(3, 4, 1);
@@ -423,10 +414,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void OfATreeWithDuplicateIntervals_ShouldYieldDuplicateValues(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(1, 2, 1);
             tree.Add(1, 2, 1);
             tree.Add(1, 2, 1);
@@ -441,10 +432,10 @@ public class CompatibilityTests
     public class Enumerating : CompatibilityTests
     {
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void AnEmptyTree_ShouldYield0Intervals(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
             var intervals = tree.ToList();
 
@@ -452,10 +443,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void ATreeWith1Interval_ShouldYield1Interval(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(1, 2, 1);
 
             var intervals = tree.ToList();
@@ -465,10 +456,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void ATreeWith10Intervals_ShouldYield10Intervals(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             var expectedIntervals = 
                 Enumerable.Range(0, 10)
                     .Select(i => new IntervalTree.RangeValuePair<long, int>(i, i + 1, i))
@@ -486,10 +477,10 @@ public class CompatibilityTests
         }
 
         [Test]
-        [TestCaseSource(nameof(TreeTypes))]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void ATreeWithDuplicateIntervals_ShouldYieldDuplicateValues(string treeType)
         {
-            var tree = CreateEmptyTree(treeType);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(1, 2, 1);
             tree.Add(1, 2, 1);
             tree.Add(1, 2, 1);
@@ -505,18 +496,22 @@ public class CompatibilityTests
     {
         [Test]
         public void CompareResults(
-            [Values("light")] string treeType,
-            [Range(1, 25)] int seed)
+            [ValueSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+            string treeType,
+            [Range(1, 100)]
+            int seed)
         {
+            const int IntervalMaxCount = 100;
+            const int IntervalMax = 100;
             var random = new Random(seed);
 
-            var intervals = Enumerable.Range(0, 16)
-                .Select(_ => random.NextInt64(0, 100))
-                .Select((from, i) => new Interval<long, int>(from, from + random.Next(1, 10), i))
+            var intervals = Enumerable.Range(0, random.Next(3, IntervalMaxCount))
+                .Select(_ => random.NextInt64(0, IntervalMax))
+                .Select((from, i) => new Interval<long, int>(from, from + random.Next(1, IntervalMax), i))
                 .ToList();
 
-            var originalTree = CreateEmptyTree("reference");
-            var treeUnderTest = CreateEmptyTree(treeType);
+            var originalTree = TreeFactory.CreateEmptyTree<long, int>("reference");
+            var treeUnderTest = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
             foreach (var interval in intervals)
             {
@@ -524,7 +519,7 @@ public class CompatibilityTests
                 treeUnderTest.Add(interval.From, interval.To, interval.Value);
             }
 
-            for (var i = 0; i < 10_100; i++)
+            for (var i = 0; i < IntervalMax * 2; i++)
             {
                 var reference = originalTree.Query(i);
                 var result = treeUnderTest.Query(i);

@@ -4,17 +4,19 @@ using LightIntervalTree;
 
 namespace Benchmark;
 
+[MemoryDiagnoser]
 public class QueryBenchmarks
 {
     const int IntervalCount = 100_000;
     private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _treeCache = new();
     private Dictionary<string, IEnumerable<Interval<long, int>>> _dataCache = new();
 
+    public string[] TreeTypes => TreeFactory.TreeTypes;
 
-    [Params("reference", "light")]
+    [ParamsSource(nameof(TreeTypes))]
     public string TreeType { get; set; } = string.Empty;
 
-    [Params("sparse", "dense", "ascending", "descending")]
+    [Params("sparse", "dense")]
     public string DataType { get; set; } = string.Empty;
 
     public IntervalTree.IIntervalTree<long, int> GetLoadedTree(string treeType, string dataType)
@@ -25,12 +27,7 @@ public class QueryBenchmarks
             return _treeCache[key];
         }
 
-        IntervalTree.IIntervalTree<long, int> tree = treeType switch
-        {
-            "reference" => new IntervalTree.IntervalTree<long, int>(),
-            "light" => new TreeAdapter<long, int>(new LightIntervalTree.LightIntervalTree<long, int>()),
-            _ => throw new ArgumentException(nameof(treeType))
-        };
+        var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
         var data = _dataCache[dataType];
 
@@ -72,21 +69,15 @@ public class QueryBenchmarks
             })
             .ToList();
         _dataCache["dense"] = dense;
-
-        var ascending = sparse.OrderBy(i => i.From).ToList();
-        _dataCache["ascending"] = ascending;
-
-        var descending = sparse.OrderByDescending(i => i.From).ToList();
-        _dataCache["descending"] = ascending;
     }
 
-    [Benchmark(OperationsPerInvoke = IntervalCount)]
+    [Benchmark(OperationsPerInvoke = 10*IntervalCount)]
     public void Query()
     {
         var tree = GetLoadedTree(TreeType, DataType);
-        for (var i = 0; i < IntervalCount; i++)
+        for (var i = 0; i < IntervalCount * 10; i++)
         {
-            tree.Query(10*i);
+            tree.Query(i);
         }
     }
 }

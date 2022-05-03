@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
 using Extras;
 
 namespace Benchmark;
@@ -8,23 +8,11 @@ namespace Benchmark;
 public class LoadBenchmarks
 {
     private List<(long, long, int)> _ranges = new();
-    private List<long> _tests = new();
-    private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _preloadedTrees = new();
 
-    private readonly string[] TreeTypes = { "reference", "light" };
+    public string[] TreeTypes => TreeFactory.TreeTypes;
 
-    [Params("reference", "light")]
+    [ParamsSource(nameof(TreeTypes))]
     public string TreeType { get; set; } = string.Empty;
-
-    public IntervalTree.IIntervalTree<long, int> GetEmptyTree(string type)
-    {
-        return type switch
-        {
-            "reference" => new IntervalTree.IntervalTree<long, int>(),
-            "light" => new TreeAdapter<long, int>(new LightIntervalTree.LightIntervalTree<long, int>()),
-            _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
-        };
-    }
 
     [GlobalSetup]
     public void GlobalSetup()
@@ -37,27 +25,12 @@ public class LoadBenchmarks
             .Select(i => random.NextInt64(RangeMin / 1000, RangeMax / 1000))
             .Select(i => (i * 1000, (i * 1000) + (random.Next(1, 3) * 1000) - 1, random.Next(10_000)))
             .ToList();
-
-        _tests = Enumerable.Range(0, 10_000)
-            .Select(_ => random.NextInt64(RangeMin, RangeMax))
-            .ToList();
-
-        foreach (var type in TreeTypes)
-        {
-            var tree = GetEmptyTree(type);
-            foreach (var range in _ranges)
-            {
-                tree.Add(range.Item1, range.Item2, range.Item3);
-            }
-            tree.Query(0);
-            _preloadedTrees.Add(type, tree);
-        }
     }
 
     [Benchmark]
     public void Load()
     {
-        var tree = GetEmptyTree(TreeType);
+        var tree = TreeFactory.CreateEmptyTree<long, int>(TreeType);
         foreach (var (from, to, val) in _ranges)
         {
             tree.Add(from, to, val);
