@@ -2,17 +2,33 @@
 
 A light-weight interval tree in C#. Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations. `RangeTree` is still a great option if you need a fully featured interval tree.
 
-This implementation uses a combination of of concepts from [Centered Interval Trees (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree) - for querying - and [AVL trees (Wikipedia)](https://en.wikipedia.org/wiki/AVL_tree) - for self-balancing.
+This package currently offers two different interval tree implementations - `LightIntervalTree` and `QuickIntervalTree` - the former being the most memory-efficient and the latter using a bit more memory in exchange for some significant performance gains. Read on for more details and benchmarks.
+
+<!-- This implementation uses a combination of of concepts from [Centered Interval Trees (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree) - for querying - and [AVL trees (Wikipedia)](https://en.wikipedia.org/wiki/AVL_tree) - for self-balancing. -->
+
+## Trees
+
+### `LightIntervalTree`
+
+This class is all about memory efficiency. It implements an [Augmented Interval Tree (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Augmented_tree) which forms a simple binary search tree from the intervals and only requires storing one extra property (a subtree max-value) with each interval.
+
+The simplicity of this tree makes it light and quick to initialise, but querying the tree requires a lot of key-comparisons, especially if intervals are densely packed and overlap to a high degree.
+
+This tree is balanced on the first query. Adding new intervals causes the tree to re-initialise again on the next query.
+
+### `QuickIntervalTree`
+
+This class trades a small amount of memory efficiency in favour of significantly faster queries. It is an implementation of a [Centered Interval Tree (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree). This is the same datastructure that [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree) implements.
+
+This datastructure requires building a search-tree separate from the intervals, which requires additional memory and initialisation time. The benefit is that much fewer key-comparison are required when querying the tree, especially in cases where intervals overlap.
+
+This tree is balanced on the first query. Adding new intervals causes the tree to re-initialise again on the next query.
 
 ## Limitations
 
-1. The feature set is currently quite limited, `LightIntervalTree` only supports adding intervals and querying for specific values.
+1. The feature set is currently quite limited, only adding intervals and querying for specific values is supported.
 
-1. `LightIntervalTree`s are balanced (if needed) on every `Add()` call. This is necesarry keep the internal AVL tree balanced and avoids keeping duplicate data. It has the benefit of offering consistent query times, where `RangeTree` will rebuild the whole tree of the first query after and addition or deletion.
-
-1. `LightIntervalTree`s are limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization.
-
-1. `LightIntervalTree`s is optimised for "sparse" data sets, i.e. intervals with few or no overlaps. For dense data sets (avg. 5+ overlaps), try using [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree) instead.
+1. `LightIntervalTree`s are limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
 
 ## Example
 
@@ -25,59 +41,71 @@ tree.Add(100, 200, 1);
 tree.Add(120, 150, 2);
 tree.Add(110, 250, 3);
 
-// query for a value
-var results = tree.Query(123);
+// query
+tree.Query(105); // result is {1}
+tree.Query(110); // result is {1, 3}
+tree.Query(150); // result is {1, 2, 3}
 
-// result is {1, 2, 3} (no order guarantee)
+// note that result order is not guaranteed
 ```
 
 ## Performance
 
-Testing shows that for sparse data sets, `LightIntervalTree` uses just 1/10th of the memory compared to `RangeTree` while offering similar or better construction and query times.
-
-Denser data sets with an average of ~5 overlaps use 1/3rd the memory compared to `RangeTree` while still offering comparable construction and query times.
-
-### Load 300 000 sparse intervals
-
-| Method |  TreeType |     Mean |    Error |   StdDev |      Gen 0 |     Gen 1 |     Gen 2 | Allocated |
-|------- |---------- |---------:|---------:|---------:|-----------:|----------:|----------:|----------:|
-|   Load |     light | 136.1 ms |  2.57 ms |  2.40 ms |   250.0000 |  250.0000 |  250.0000 |     48 MB |
-|   Load | reference | 538.0 ms | 10.32 ms | 11.47 ms | 28000.0000 | 7000.0000 | 2000.0000 |    623 MB |
-
-> Note: Allocated memory is different from memory usage. It describes to total amount of memory written, not how much was ultimately kept.
-
-###  Query trees of 100 000 intervals
-
-| Method |  TreeType |   DataType |     Mean |    Error |   StdDev |
-|------- |---------- |----------- |---------:|---------:|---------:|
-|  Query |     light |      dense | 825.7 ns | 16.37 ns | 20.11 ns |
-|  Query |     light |     sparse | 239.7 ns |  4.61 ns |  4.93 ns |
-|  Query | reference |      dense | 918.4 ns | 17.37 ns | 17.06 ns |
-|  Query | reference |     sparse | 460.4 ns |  8.60 ns |  8.04 ns |
-
 ### Memory usage
 
-In order to gauge real-world memory performance, this repository includes a `TestConsole` project which allows instantiating a tree with several parameters and print out the current memory usage. It is used by running:
+Benchmarking memory usage is tricky. There are many different measures of memory usage, and with the GC releasing unused memory periodically, measurements tend to fluctuate quite a bit.
 
-```sh
-> ./TestConsole.exe memtest light --count 1000000 --interval-step 1 --interval-max 10000 --interval-max-size 2000
-TotalComittedBytes: 49720 KB
-> ./TestConsole.exe memtest reference --count 1000000 --interval-step 1 --interval-max 10000 --interval-max-size 2000
-TotalComittedBytes: 235776 KB
-```
+Nevertheless, this repository includes a `TestConsole` program which will create a number of trees (configurable) and print memory usage between each tree loaded. The measurement is taken using `Process.PrivateMemorySize64` [(Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.privatememorysize64?view=net-6.0).
 
-In short, the console generates `--count` number of random intervals and adds them to either a `reference` tree (RangeTree) or a `light` tree (LightIntervalTree). The other parameters control the maximum starting coordinate of the intervals `--interval-max` (random 0 to max), the maximum size of the intervals `--interval-max-size` (random 1 to max), and the alignment of the intervals in steps `--interval-step` (i.e. step X means all starting coordinates are integer divisible by X).
+The following table contains the change in memory usage measured between loading 10 trees consecutively using `TestConsole`. The test is run with 1.000.000 intervals per tree.
 
-The following was run with a `--interval-step 1` and an `--interval-max 1000000`.
+| Tree No. | RangeTree (reference) | LightIntervalTree | QuickIntervalTree |
+|---------:|----------------------:|------------------:|------------------:|
+|        1 |                251 MB |             68 MB |             60 MB |
+|        2 |                102 MB |             32 MB |             65 MB |
+|        3 |                -14 MB |             33 MB |             71 MB |
+|        4 |                135 MB |             63 MB |             34 MB |
+|        5 |                -67 MB |             32 MB |             57 MB |
+|        6 |                 98 MB |             32 MB |             57 MB |
+|        7 |                220 MB |             63 MB |             55 MB |
+|        8 |                140 MB |             41 MB |             24 MB |
+|        9 |                -72 MB |             32 MB |             42 MB |
+|       10 |                134 MB |             32 MB |             66 MB |
 
-| Interval Count | Interval Max Size | Memory (Reference) | Memory (Light) |     Ratio |
-|---------------:|------------------:|-------------------:|---------------:|----------:|
-|        100 000 |               100 |            35.7 MB |     **8.2 MB** |  **0.23** |
-|      1 000 000 |               100 |           190.3 MB |    **29.7 MB** |  **0.16** |
-|     10 000 000 |               100 |          2595.7 MB |   **203.6 MB** |  **0.08** |
-|        100 000 |              1000 |            30.2 MB |     **4.0 MB** |  **0.13** |
-|      1 000 000 |              1000 |           148.7 MB |    **50.0 MB** |  **0.34** |
-|     10 000 000 |              1000 |          3959.3 MB |   **197.5 MB** |  **0.05** |
+| Metric     | RangeTree (reference) | LightIntervalTree | QuickIntervalTree |
+|------------|----------------------:|------------------:|------------------:|
+| Avg change |                 92 MB |             43 MB |             53 MB |
+| Max change |                251 MB |             68 MB |             71 MB |
+
+It is clear that both `LightIntervalTree` and `QuickIntervalTree` offer better memory efficiency on average, compared to `RangeTree`. Additionally, memory growth is much more stable. Only a few objects are allocated per tree, and these are mostly long-lived and don't require (immediate) garbage collection. As a result, loading a tree does not cause a large spike in memory use and GC collections.
+
+### Load 300.000 sparse intervals
+
+| Method |  TreeType |      Mean | Allocated |
+|------- |---------- |----------:|----------:|
+|   Load |     light |  30.27 ms |     32 MB |
+|   Load |     quick |  61.70 ms |     53 MB |
+|   Load | reference | 472.00 ms |    623 MB |
+
+Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicker, but also allocates a lot fewer objects / less memory in the process. This means less work for the GC and reduces potential spikes in memory usage.
+
+> Note: "Allocated" memory is different from memory usage. It describes to total amount of memory written, not how much was ultimately kept.
+
+###  Query trees of 100.000 intervals
+
+| Method | TreeType  | DataType |       Mean | Allocated |
+|--------|-----------|----------|-----------:|----------:|
+| Query  | light     | dense    | 1,350.2 ns |   1,197 B |
+| Query  | light     | medium   |   273.4 ns |     197 B |
+| Query  | light     | sparse   |   158.4 ns |      59 B |
+| Query  | quick     | dense    |   435.7 ns |   1,197 B |
+| Query  | quick     | medium   |   152.3 ns |     197 B |
+| Query  | quick     | sparse   |   110.1 ns |      59 B |
+| Query  | reference | dense    | 4,007.2 ns |   5,556 B |
+| Query  | reference | medium   |   876.1 ns |   1,436 B |
+| Query  | reference | sparse   |   428.1 ns |     908 B |
+
+`LightIntervalTree` is about 3-4 times quicker to query. `QuickIntervalTree` manages 4-9 times faster queries, and pulls ahead in dense datasets.
 
 ## Thread Safety
 
@@ -85,11 +113,11 @@ Concurrent reads are safe, but adding intervals requires exclusive access. It is
 
 ## TODO list
 
-* Order intervals within nodes to optimize queries
 * Add method for querying a range
-* Create a light-er class using shorts for internal indecies
-* Consider storing reverse-ordered intervals within nodes to further optimize queries
-* Consider supporting remove methods
+* Add remove methods
+* Consider adding a new auto-balancing tree
+* Consider adding constructors that take custom `Comparer`s
+* Consider adding constructors that take a `capacity` hint
 
 ## Optimizations over RangeTree
 
@@ -100,7 +128,7 @@ A few key design decisions were made to reduce the memory usage.
 1. Model tree nodes as value types (`struct`) rather than objects (`class`)
     * Objects suffer memory overhead in the form of type and method information
     * Since `struct`s cannot reference themselves an index (`int`) is used to reference other nodes
-1. Store nodes and intervals in indexable lists, use indexes rather than references as pointers
+1. Store nodes and intervals in indexable arrays, use indexes rather than references as pointers
     * Pointers in 64-bit systems take up 8 bytes of storage, `int`s only take 4 bytes
     * Storing value types in Lists/Arrays may improve CPU caching since elements are co-located
 1. Nodes store their intervals in linked lists
