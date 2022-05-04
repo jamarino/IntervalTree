@@ -32,6 +32,11 @@ app.AddCommand("memtest", (
 
     var random = new Random(seed.Value);
     using var p = Process.GetCurrentProcess();
+    p.Refresh();
+    var initialMemoryUsage = p.PrivateMemorySize64;
+    var previousMemoryUsage = initialMemoryUsage;
+    if (verbose.Value)
+        Console.WriteLine($"Initial memory usage: {initialMemoryUsage / 1024} KB");
     var trees = new List<IntervalTree.IIntervalTree<long, int>>();
 
     while (trees.Count < treesMax.Value)
@@ -50,11 +55,14 @@ app.AddCommand("memtest", (
 
         p.Refresh();
         var privateBytes = p.PrivateMemorySize64;
+        var memoryDelta = privateBytes - previousMemoryUsage;
+        previousMemoryUsage = privateBytes;
 
         if (verbose.Value)
             Console.WriteLine($"Tree count: {trees.Count,3}. " +
                 $"Total private memory: {privateBytes / 1024 / 1024,5} MB. " +
-                $"Memory per tree: {privateBytes / 1024 / 1024 / trees.Count,5} MB");
+                $"Memory delta: {memoryDelta / 1024 / 1024,5} MB. " +
+                $"Avg memory per tree: {(privateBytes-initialMemoryUsage) / 1024 / 1024 / trees.Count,5} MB");
 
         if ((double)(trees.Count + 1) / trees.Count * privateBytes > memoryMax)
             break;
@@ -62,7 +70,7 @@ app.AddCommand("memtest", (
 
     Console.WriteLine($"Tree count: {trees.Count}");
     Console.WriteLine($"Total private memory: {p.PrivateMemorySize64 / 1024 / 1024} MB");
-    Console.WriteLine($"Memory per tree: {p.PrivateMemorySize64 / 1024 / 1024 / trees.Count} MB");
+    Console.WriteLine($"Memory per tree: {(p.PrivateMemorySize64-initialMemoryUsage) / 1024 / 1024 / trees.Count} MB");
 
     if (hang.Value)
     {
