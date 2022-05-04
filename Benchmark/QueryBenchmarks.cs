@@ -16,7 +16,7 @@ public class QueryBenchmarks
     [ParamsSource(nameof(TreeTypes))]
     public string TreeType { get; set; } = string.Empty;
 
-    [Params("sparse", "dense")]
+    [Params("sparse", "medium", "dense")]
     public string DataType { get; set; } = string.Empty;
 
     public IntervalTree.IIntervalTree<long, int> GetLoadedTree(string treeType, string dataType)
@@ -58,13 +58,25 @@ public class QueryBenchmarks
             .ToList();
         _dataCache["sparse"] = sparse;
 
-        var dense = Enumerable.Range(0, IntervalCount)
+        var medium = Enumerable.Range(0, IntervalCount)
             .Select(_ =>
             {
                 var start = random.Next(10*IntervalCount);
                 return new Interval<long, int>(
                     start,
-                    start + random.Next(5, 200),
+                    start + random.Next(10, 200),
+                    1);
+            })
+            .ToList();
+        _dataCache["medium"] = medium;
+
+        var dense = Enumerable.Range(0, IntervalCount)
+            .Select(_ =>
+            {
+                var start = random.Next(10 * IntervalCount);
+                return new Interval<long, int>(
+                    start,
+                    start + random.Next(100, 2000),
                     1);
             })
             .ToList();
