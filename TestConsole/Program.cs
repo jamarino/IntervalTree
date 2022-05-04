@@ -1,5 +1,6 @@
-﻿using Cocona;
+using Cocona;
 using Extras;
+using System.Diagnostics;
 
 var builder = CoconaLiteApp.CreateBuilder();
 
@@ -12,36 +13,62 @@ app.AddCommand("memtest", (
     int? count,
     long? intervalMax,
     int? intervalStep,
-    long? intervalMaxSize
-    ) =>
+    long? intervalMaxSize,
+    int? memoryMax,
+    bool? verbose,
+    bool? hang,
+    int? treesMax,
+    CoconaAppContext context) =>
 {
     seed ??= 0;
     count ??= 100_000;
     intervalMax ??= 1_000_000;
-    intervalStep ??= 1_000;
-    intervalMaxSize ??= 5_000;
-
-    IntervalTree.IIntervalTree<long, int> tree = treeType switch
-    {
-        "reference" => new IntervalTree.IntervalTree<long, int>(),
-        "light" => new TreeAdapter<long, int>(new LightIntervalTree.LightIntervalTree<long, int>()),
-        _ => throw new Exception($"Unknown tree type: {treeType}")
-    };
+    intervalStep ??= 1;
+    intervalMaxSize ??= 100;
+    memoryMax ??= 1_000_000_000;
+    verbose ??= true;
+    hang ??= false;
+    treesMax ??= 25;
 
     var random = new Random(seed.Value);
+    using var p = Process.GetCurrentProcess();
+    var trees = new List<IntervalTree.IIntervalTree<long, int>>();
 
-    for (int i = 0; i < count.Value; i++)
+    while (trees.Count < treesMax.Value)
     {
-        var from = random.NextInt64(0, intervalMax.Value) / intervalStep.Value * intervalStep.Value;
-        var to = from + random.NextInt64(1, intervalMaxSize.Value);
-        var val = random.Next(10_000);
-        tree.Add(from, to, val);
+        var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+        trees.Add(tree);
+
+        for (int i = 0; i < count.Value; i++)
+        {
+            var from = random.NextInt64(0, intervalMax.Value) / intervalStep.Value * intervalStep.Value;
+            var to = from + random.NextInt64(0, Math.Min(intervalMaxSize.Value, intervalMax.Value - from + 1)) + 1;
+            tree.Add(from, to, i);
+        }
+
+        tree.Query(0);
+
+        p.Refresh();
+        var privateBytes = p.PrivateMemorySize64;
+
+        if (verbose.Value)
+            Console.WriteLine($"Tree count: {trees.Count,3}. " +
+                $"Total private memory: {privateBytes / 1024 / 1024,5} MB. " +
+                $"Memory per tree: {privateBytes / 1024 / 1024 / trees.Count,5} MB");
+
+        if ((double)(trees.Count + 1) / trees.Count * privateBytes > memoryMax)
+            break;
     }
 
-    tree.Query(0);
+    Console.WriteLine($"Tree count: {trees.Count}");
+    Console.WriteLine($"Total private memory: {p.PrivateMemorySize64 / 1024 / 1024} MB");
+    Console.WriteLine($"Memory per tree: {p.PrivateMemorySize64 / 1024 / 1024 / trees.Count} MB");
 
-    var memInfo = GC.GetGCMemoryInfo();
-    Console.WriteLine($"TotalComittedBytes: {memInfo.TotalCommittedBytes / 1024} KB");
+    if (hang.Value)
+    {
+        Console.WriteLine("Press Enter to terminate.");
+        Console.ReadLine();
+    }
 });
 
 await app.RunAsync();

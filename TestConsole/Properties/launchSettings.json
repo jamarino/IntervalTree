@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Memtest light": {
+      "commandName": "Project",
+      "commandLineArgs": "memtest light --count 1000000 --interval-step 1 --interval-max-size 100 --interval-max 10000000"
+    },
+    "Memtest reference": {
+      "commandName": "Project",
+      "commandLineArgs": "memtest reference --count 1000000 --interval-step 1 --interval-max-size 100 --interval-max 10000000"
+    },
+    "Memtest quick": {
+      "commandName": "Project",
+      "commandLineArgs": "memtest quick --count 1000000 --interval-step 1 --interval-max-size 100 --interval-max 10000000"
+    }
+  }
+}
