@@ -15,8 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Benchmark\Benchmark.csproj" />
-    <ProjectReference Include="..\Extras\Extras.csproj" />
+    <ProjectReference Include="..\Tools\Extras\Extras.csproj" />
     <ProjectReference Include="..\Source\IntervalTree\IntervalTree.csproj" />
   </ItemGroup>
 

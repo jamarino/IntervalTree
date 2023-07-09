@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Extras\Extras.csproj" />
-    <ProjectReference Include="..\Source\IntervalTree\IntervalTree.csproj" />
+    <ProjectReference Include="..\..\Source\IntervalTree\IntervalTree.csproj" />
   </ItemGroup>
 
 </Project>

@@ -5,13 +5,19 @@ VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntervalTree", "Source\IntervalTree\IntervalTree.csproj", "{0F151482-D31A-4848-A191-6630A4905197}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{31057C6A-2476-40B7-965B-6604FBD97683}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Tools\Benchmark\Benchmark.csproj", "{31057C6A-2476-40B7-965B-6604FBD97683}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{79A934D1-E699-490C-8C40-B3598B64BFE7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{86FD38E6-F284-4B74-9B2D-7402CD7FFC72}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "Tools\TestConsole\TestConsole.csproj", "{86FD38E6-F284-4B74-9B2D-7402CD7FFC72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extras", "Extras\Extras.csproj", "{9734BBA7-2408-4E00-A085-51BCC923AD6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extras", "Tools\Extras\Extras.csproj", "{9734BBA7-2408-4E00-A085-51BCC923AD6E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{4FA63D1F-4750-4CA7-9177-B05E10BFB2CB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{717DFC75-4AC6-4560-8069-B708781061F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{48B3E18F-A77B-468B-B7EE-557E2FC61B1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +48,13 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0F151482-D31A-4848-A191-6630A4905197} = {4FA63D1F-4750-4CA7-9177-B05E10BFB2CB}
+		{31057C6A-2476-40B7-965B-6604FBD97683} = {48B3E18F-A77B-468B-B7EE-557E2FC61B1A}
+		{79A934D1-E699-490C-8C40-B3598B64BFE7} = {717DFC75-4AC6-4560-8069-B708781061F5}
+		{86FD38E6-F284-4B74-9B2D-7402CD7FFC72} = {48B3E18F-A77B-468B-B7EE-557E2FC61B1A}
+		{9734BBA7-2408-4E00-A085-51BCC923AD6E} = {48B3E18F-A77B-468B-B7EE-557E2FC61B1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BA65CC01-6535-4B96-8417-923D99E5B135}
