@@ -13,10 +13,19 @@
         <PackageId>Jamarino.IntervalTree</PackageId>
         <Version>1.0.0-alpha</Version>
         <Authors>Jonathan Marino</Authors>
-        <Description>Interval tree implementation focused on memory efficiency. Similar to the RangeTree implementation, but uses as little as &lt;10% of the memory in comparison.</Description>
+        <Description>Interval tree implementation focused on memory efficiency and performance. Similar to the RangeTree implementation, but uses as little as &lt;10% of the peak memory in comparison.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/jamarino/IntervalTree</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/jamarino/IntervalTree</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
         <PackageTags>light interval tree intervaltree rangetree</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
 </Project>
