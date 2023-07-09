@@ -1,12 +1,29 @@
-# LightIntervalTree
+# Jamarino.IntervalTree
 
-A light-weight interval tree in C#. Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations. `RangeTree` is still a great option if you need a fully featured interval tree.
+A light-weight, performant interval tree in C#. Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations. `RangeTree` is still a great option if you need a fully featured interval tree.
 
-This package currently offers two different interval tree implementations - `LightIntervalTree` and `QuickIntervalTree` - the former being the most memory-efficient and the latter using a bit more memory in exchange for some significant performance gains. Read on for more details and benchmarks.
+## Example
 
-<!-- This implementation uses a combination of of concepts from [Centered Interval Trees (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree) - for querying - and [AVL trees (Wikipedia)](https://en.wikipedia.org/wiki/AVL_tree) - for self-balancing. -->
+```csharp
+// create a tree
+var tree = new LightIntervalTree<short, short>();
+
+// add intervals
+tree.Add(100, 200, 1);
+tree.Add(120, 150, 2);
+tree.Add(110, 250, 3);
+
+// query
+tree.Query(105); // result is {1}
+tree.Query(110); // result is {1, 3}
+tree.Query(150); // result is {1, 2, 3}
+
+// note that result order is not guaranteed
+```
 
 ## Trees
+
+This package currently offers two different interval tree implementations - `LightIntervalTree` and `QuickIntervalTree` - the former being the most memory-efficient and the latter using a bit more memory in exchange for some significant performance gains. Read on for more details and benchmarks.
 
 ### `LightIntervalTree`
 
@@ -28,26 +45,7 @@ This tree is balanced on the first query. Adding new intervals causes the tree t
 
 1. The feature set is currently quite limited, only adding intervals and querying for specific values is supported.
 
-1. `LightIntervalTree`s are limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
-
-## Example
-
-```csharp
-// create a tree
-var tree = new LightIntervalTree<short, short>();
-
-// add intervals
-tree.Add(100, 200, 1);
-tree.Add(120, 150, 2);
-tree.Add(110, 250, 3);
-
-// query
-tree.Query(105); // result is {1}
-tree.Query(110); // result is {1, 3}
-tree.Query(150); // result is {1, 2, 3}
-
-// note that result order is not guaranteed
-```
+1. `LightIntervalTree` is limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
 
 ## Performance
 
@@ -109,7 +107,10 @@ Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicke
 
 ## Thread Safety
 
-Concurrent reads are safe, but adding intervals requires exclusive access. It is up to the consumer to enforce synchronization controls. Consider using something like [ReaderWriterLockSlim (Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim).
+Tree-initialization, triggered by the first query after an `.Add()` invocation, is _not_ thread safe. Subsequent concurrent queries are safe. Adding new intervals requires exclusive access, followed by a single query to re-initialise the tree before releasing exclusive access. It is up to the consumer to enforce synchronization controls. Consider using something like [ReaderWriterLockSlim (Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim).
+
+> **Warning**<br>
+When using trees in a concurrent environment, please be sure to initialise the trees while still holding exclusive access. Do this simply by performing a `.Query()` invocation, before yielding exclusive access. Do this after initial load and after any later modifications via calls to `.Add()`.
 
 ## TODO list
 
