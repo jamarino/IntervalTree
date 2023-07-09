@@ -1,4 +1,5 @@
 using System;
+using Jamarino.IntervalTree;
 
 namespace Extras;
 
@@ -20,8 +21,8 @@ public static class TreeFactory
         => type switch
         {
             "reference" => new IntervalTree.IntervalTree<TKey, TValue>(),
-            "light" => new TreeAdapter<TKey, TValue>(new LightIntervalTree.LightIntervalTree<TKey, TValue>()),
-            "quick" => new TreeAdapter<TKey, TValue>(new LightIntervalTree.QuickIntervalTree<TKey, TValue>()),
+            "light" => new TreeAdapter<TKey, TValue>(new LightIntervalTree<TKey, TValue>()),
+            "quick" => new TreeAdapter<TKey, TValue>(new QuickIntervalTree<TKey, TValue>()),
             _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
         };
 }

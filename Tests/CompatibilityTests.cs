@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Extras;
-using LightIntervalTree;
 
 namespace Tests;
 
@@ -507,7 +506,7 @@ public class CompatibilityTests
 
             var intervals = Enumerable.Range(0, random.Next(3, IntervalMaxCount))
                 .Select(_ => random.NextInt64(0, IntervalMax))
-                .Select((from, i) => new Interval<long, int>(from, from + random.Next(1, IntervalMax), i))
+                .Select((from, i) => new Jamarino.IntervalTree.Interval<long, int>(from, from + random.Next(1, IntervalMax), i))
                 .ToList();
 
             var originalTree = TreeFactory.CreateEmptyTree<long, int>("reference");

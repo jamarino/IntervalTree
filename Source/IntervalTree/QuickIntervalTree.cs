@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace LightIntervalTree;
+namespace Jamarino.IntervalTree;
 
 public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 {

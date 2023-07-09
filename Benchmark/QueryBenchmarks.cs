@@ -1,6 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using Extras;
-using LightIntervalTree;
+using Jamarino.IntervalTree;
 
 namespace Benchmark;
 

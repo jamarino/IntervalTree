@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LightIntervalTree", "LightIntervalTree\LightIntervalTree.csproj", "{0F151482-D31A-4848-A191-6630A4905197}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntervalTree", "Source\IntervalTree\IntervalTree.csproj", "{0F151482-D31A-4848-A191-6630A4905197}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{31057C6A-2476-40B7-965B-6604FBD97683}"
 EndProject

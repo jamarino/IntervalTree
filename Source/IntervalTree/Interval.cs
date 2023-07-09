@@ -1,4 +1,4 @@
-namespace LightIntervalTree;
+namespace Jamarino.IntervalTree;
 
 public readonly record struct Interval<TKey, TValue>
 {

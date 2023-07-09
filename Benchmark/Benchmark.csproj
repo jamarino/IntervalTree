@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Extras\Extras.csproj" />
-    <ProjectReference Include="..\LightIntervalTree\LightIntervalTree.csproj" />
+    <ProjectReference Include="..\Source\IntervalTree\IntervalTree.csproj" />
   </ItemGroup>
 
 </Project>

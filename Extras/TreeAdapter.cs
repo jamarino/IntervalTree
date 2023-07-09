@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using IntervalTree;
+using Jamarino.IntervalTree;
 
 namespace Extras;
 
-public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
+public class TreeAdapter<TKey, TValue> : IntervalTree.IIntervalTree<TKey, TValue>
 {
-    public TreeAdapter(LightIntervalTree.IIntervalTree<TKey, TValue> lightTree)
+    public TreeAdapter(Jamarino.IntervalTree.IIntervalTree<TKey, TValue> lightTree)
     {
         LightTree = lightTree;
     }
@@ -17,7 +18,7 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public int Count => LightTree.Count;
 
-    public LightIntervalTree.IIntervalTree<TKey, TValue> LightTree { get; }
+    public Jamarino.IntervalTree.IIntervalTree<TKey, TValue> LightTree { get; }
 
     public void Add(TKey from, TKey to, TValue value) => LightTree.Add(from, to, value);
 
@@ -26,7 +27,7 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
         throw new NotImplementedException();
     }
 
-    public IEnumerator<RangeValuePair<TKey, TValue>> GetEnumerator() => 
+    public IEnumerator<RangeValuePair<TKey, TValue>> GetEnumerator() =>
         LightTree
             .Select(i => new RangeValuePair<TKey, TValue>(i.From, i.To, i.Value))
             .GetEnumerator();
