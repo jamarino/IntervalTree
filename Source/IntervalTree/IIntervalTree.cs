@@ -1,6 +1,7 @@
 namespace Jamarino.IntervalTree;
 
 public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue>>
+    where TKey : IComparable<TKey>
 {
     int Count { get; }
 

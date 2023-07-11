@@ -8,16 +8,15 @@ public static class TreeFactory
     public static string[] TreeTypes = new string[] {
         "reference",
         "light",
-        "quick"
+        "quick",
     };
 
     public static string[] TreeTypesSansReference = new string[] {
         "light",
-        "quick"
+        "quick",
     };
 
-    public static IntervalTree.IIntervalTree<TKey, TValue> CreateEmptyTree<TKey, TValue>(string type)
-        where TKey : IComparable<TKey> 
+    public static IntervalTree.IIntervalTree<TKey, TValue> CreateEmptyTree<TKey, TValue>(string type) where TKey : IComparable<TKey>
         => type switch
         {
             "reference" => new IntervalTree.IntervalTree<TKey, TValue>(),

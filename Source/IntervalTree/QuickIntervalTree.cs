@@ -3,12 +3,8 @@ using System.Collections;
 namespace Jamarino.IntervalTree;
 
 public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
+    where TKey : IComparable<TKey>
 {
-    private readonly IComparer<TKey> _comparer = Comparer<TKey>.Default;
-    private readonly IComparer<Interval<TKey, TValue>> _comparerAscending =
-        Comparer<Interval<TKey, TValue>>.Create(static (i, o) => Comparer<TKey>.Default.Compare(i.From, o.From));
-    private readonly IComparer<IntervalHalf> _comparerHalfDescending =
-        Comparer<IntervalHalf>.Create(static (i, o) => Comparer<TKey>.Default.Compare(o.Start, i.Start));
     private Interval<TKey, TValue>[] _intervals = new Interval<TKey, TValue>[16];
     private int _intervalCount = 0;
     private IntervalHalf[] _intervalsDescending = Array.Empty<IntervalHalf>();
@@ -56,7 +52,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
             if (node.IntervalCount == 0) return;
 
-            var centerComparison = _comparer.Compare(target, node.Center);
+            var centerComparison = target.CompareTo(node.Center);
 
             if (centerComparison < 0)
             {
@@ -65,7 +61,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var intv = _intervals[i];
-                    if (_comparer.Compare(target, intv.From) >= 0)
+                    if (target.CompareTo(intv.From) >= 0)
                     {
                         result.Add(intv.Value);
                     }
@@ -85,7 +81,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var half = _intervalsDescending[i];
-                    if (_comparer.Compare(target, half.Start) <= 0)
+                    if (target.CompareTo(half.Start) <= 0)
                     {
                         result.Add(half.Value);
                     }
@@ -116,7 +112,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         _nodes = new() { new Node(), new Node() };
         _intervalsDescending = new IntervalHalf[_intervalCount];
 
-        Array.Sort(_intervals, 0, _intervalCount, _comparerAscending);
+        Array.Sort(_intervals, 0, _intervalCount);
 
         BuildRec(0, _intervalCount - 1, 1);
 
@@ -135,7 +131,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
             // Move index if multiple intervals share same 'From' value
             while (centerIndex < max
-                && _comparer.Compare(centerValue, _intervals[centerIndex + 1].From) == 0)
+                && centerValue.CompareTo(_intervals[centerIndex + 1].From) == 0)
             {
                 centerIndex++;
             }
@@ -147,12 +143,12 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             {
                 var interval = _intervals[i];
 
-                if (_comparer.Compare(interval.From, centerValue) > 0)
+                if (interval.From.CompareTo(centerValue) > 0)
                 {
                     // no more overlapping intervals, the rest fall to right side
                     break;
                 }
-                else if (_comparer.Compare(interval.To, centerValue) >= 0)
+                else if (interval.To.CompareTo(centerValue) >= 0)
                 {
                     // overlapping interval, add the desending half
                     //_intervalsDescending[intervalIndex] = new IntervalHalf(interval.To, interval.Value);
@@ -179,8 +175,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             Array.Sort(
                 _intervals,
                 nodeIntervalIndex,
-                nodeIntervalCount,
-                _comparerAscending);
+                nodeIntervalCount);
 
             // add descending interval halves
 
@@ -191,11 +186,8 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
 
             // sort descending interval halves
-            Array.Sort(
-                _intervalsDescending,
-                nodeIntervalIndex,
-                nodeIntervalCount,
-                _comparerHalfDescending);
+            Array.Sort(_intervalsDescending, nodeIntervalIndex, nodeIntervalCount);
+            Array.Reverse( _intervalsDescending, nodeIntervalIndex, nodeIntervalCount);
 
             if (nodeIntervalCount == sliceWidth)
             {
@@ -248,7 +240,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         public readonly int IntervalCount;
     }
 
-    private readonly record struct IntervalHalf
+    private readonly record struct IntervalHalf : IComparable<IntervalHalf>
     {
         public IntervalHalf(TKey start, TValue value)
         {
@@ -258,5 +250,10 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
         public readonly TKey Start;
         public readonly TValue Value;
+
+        public int CompareTo(QuickIntervalTree<TKey, TValue>.IntervalHalf other)
+        {
+            return Start.CompareTo(other.Start);
+        }
     }
 }

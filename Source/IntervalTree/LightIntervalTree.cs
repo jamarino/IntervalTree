@@ -5,12 +5,10 @@ namespace Jamarino.IntervalTree;
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
-    private readonly IComparer<TKey> _comparer = Comparer<TKey>.Default;
     private readonly List<OrderedInterval> _intervals = new();
     private bool _isBuilt = false;
     private int _treeHeight = 0;
     private int _treeSizeFull = 0;
-    
 
     public int Count => _intervals.Count;
 
@@ -47,15 +45,15 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             var center = (min + max + 1) / 2;
             var interval = _intervals[center];
 
-            var compareMax = _comparer.Compare(target, interval.Max);
+            var compareMax = target.CompareTo(interval.Max);
             if (compareMax > 0) return; // target larger than Max, bail
 
             // search left
             QueryRec(target, min, center - 1, results);
 
             // check current node
-            var compareFrom = _comparer.Compare(target, interval.From);
-            var compareTo = _comparer.Compare(target, interval.To);
+            var compareFrom = target.CompareTo(interval.From);
+            var compareTo = target.CompareTo(interval.To);
 
             if (compareFrom >= 0 && compareTo <= 0)
                 results.Add(interval.Value);
@@ -111,16 +109,10 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     UpdateMaxRec(center + 1, max) :
                     maxValue;
 
-                if (_comparer.Compare(left, right) > 0)
-                {
-                    if (_comparer.Compare(left, maxValue) > 0)
-                        maxValue = left;
-                }
-                else
-                {
-                    if (_comparer.Compare(right, maxValue) > 0)
-                        maxValue = right;
-                }
+                if (left.CompareTo(maxValue) > 0)
+                    maxValue = left;
+                if (right.CompareTo(maxValue) > 0)
+                    maxValue = right;
 
                 // update max
                 _intervals[center] = interval with
@@ -147,13 +139,12 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         public TKey Max;
         public TValue Value;
 
-        public int CompareTo(LightIntervalTree<TKey, TValue>.OrderedInterval other)
+        public int CompareTo(OrderedInterval other)
         {
-            var fromComparison = Comparer<TKey>.Default.Compare(From, other.From);
+            var fromComparison = From.CompareTo(other.From);
             if (fromComparison != 0)
                 return fromComparison;
-            else
-                return Comparer<TKey>.Default.Compare(To, other.To);
+            return To.CompareTo(other.To);
         }
     }
 }

@@ -8,6 +8,7 @@ using Jamarino.IntervalTree;
 namespace Extras;
 
 public class TreeAdapter<TKey, TValue> : IntervalTree.IIntervalTree<TKey, TValue>
+    where TKey : IComparable<TKey>
 {
     public TreeAdapter(Jamarino.IntervalTree.IIntervalTree<TKey, TValue> lightTree)
     {
