@@ -21,6 +21,58 @@ tree.Query(150); // result is {1, 2, 3}
 // note that result order is not guaranteed
 ```
 
+## Performance TLDR;
+
+See performance section further down for more details.
+
+### Query performance
+
+```mermaid
+gantt
+    title Query performance - Queries/second (higher is better)
+    dateFormat X
+    axisFormat %s
+
+    section Quick
+    11366 : 0, 11366
+    section Light
+    7025 : 0, 7025
+    section Reference
+    1603  : 0, 1603
+```
+
+### Initialization time
+
+```mermaid
+gantt
+    title Initialization time - miliseconds (lower is better)
+    dateFormat X
+    axisFormat %s
+
+    section Quick
+    39 : 0, 39
+    section Light
+    23 : 0, 23
+    section Reference
+    344  : 0, 344
+```
+
+### Initialization memory allocation
+
+```mermaid
+gantt
+    title Initialization memory allocation - megabytes (lower is better)
+    dateFormat X
+    axisFormat %s
+
+    section Quick
+    32 : 0, 32
+    section Light
+    16 : 0, 16
+    section Reference
+    342  : 0, 342
+```
+
 ## Trees
 
 This package currently offers two different interval tree implementations - `LightIntervalTree` and `QuickIntervalTree` - the former being the most memory-efficient and the latter using a bit more memory in exchange for some significant performance gains. Read on for more details and benchmarks.
@@ -77,33 +129,33 @@ The following table contains the change in memory usage measured between loading
 
 It is clear that both `LightIntervalTree` and `QuickIntervalTree` offer better memory efficiency on average, compared to `RangeTree`. Additionally, memory growth is much more stable. Only a few objects are allocated per tree, and these are mostly long-lived and don't require (immediate) garbage collection. As a result, loading a tree does not cause a large spike in memory use and GC collections.
 
-### Load 300.000 sparse intervals
+### Load 250.000 sparse intervals
 
 | Method |  TreeType |      Mean | Allocated |
 |------- |---------- |----------:|----------:|
-|   Load |     light |  30.27 ms |     32 MB |
-|   Load |     quick |  61.70 ms |     53 MB |
-|   Load | reference | 472.00 ms |    623 MB |
+|   Load |     light |  22.87 ms |     16 MB |
+|   Load |     quick |  39.24 ms |     32 MB |
+|   Load | reference | 344.34 ms |    342 MB |
 
 Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicker, but also allocates a lot fewer objects / less memory in the process. This means less work for the GC and reduces potential spikes in memory usage.
 
 > Note: "Allocated" memory is different from memory usage. It describes to total amount of memory written, not how much was ultimately kept.
 
-###  Query trees of 100.000 intervals
+###  Query trees of 250.000 intervals
 
 | Method | TreeType  | DataType |       Mean | Allocated |
 |--------|-----------|----------|-----------:|----------:|
-| Query  | light     | dense    | 1,350.2 ns |   1,197 B |
-| Query  | light     | medium   |   273.4 ns |     197 B |
-| Query  | light     | sparse   |   158.4 ns |      59 B |
-| Query  | quick     | dense    |   435.7 ns |   1,197 B |
-| Query  | quick     | medium   |   152.3 ns |     197 B |
-| Query  | quick     | sparse   |   110.1 ns |      59 B |
-| Query  | reference | dense    | 4,007.2 ns |   5,556 B |
-| Query  | reference | medium   |   876.1 ns |   1,436 B |
-| Query  | reference | sparse   |   428.1 ns |     908 B |
+| Query  | light     | dense    |  142.35 ns |     107 B |
+| Query  | light     | medium   |   98.11 ns |      60 B |
+| Query  | light     | sparse   |   82.78 ns |      40 B |
+| Query  | quick     | dense    |   87.98 ns |     107 B |
+| Query  | quick     | medium   |   79.01 ns |      60 B |
+| Query  | quick     | sparse   |   72.18 ns |      40 B |
+| Query  | reference | dense    |  623.72 ns |   1,256 B |
+| Query  | reference | medium   |  458.71 ns |     996 B |
+| Query  | reference | sparse   |  317.60 ns |     704 B |
 
-`LightIntervalTree` is about 3-4 times quicker to query. `QuickIntervalTree` manages 4-9 times faster queries, and pulls ahead in dense datasets.
+`LightIntervalTree` is about 3-4 times quicker to query. `QuickIntervalTree` manages 4-7 times faster queries, and pulls ahead in dense datasets.
 
 ## Thread Safety
 
@@ -114,11 +166,13 @@ When using trees in a concurrent environment, please be sure to initialise the t
 
 ## TODO list
 
-* Add method for querying a range
-* Add remove methods
+* Implement method for querying a range
+* Implement remove methods
 * Consider adding a new auto-balancing tree
-* Consider adding constructors that take custom `Comparer`s
-* Consider adding constructors that take a `capacity` hint
+* Add constructors that take a `capacity` hint
+* Add dotnet7 INumber<T> TKey constraint for improved performance (approx 2x query performance)
+* Replace recursive methods with iterative ones where possible
+* Experiment with interal data arrangement to improve indexing performance and data linearity
 
 ## Optimizations over RangeTree
 

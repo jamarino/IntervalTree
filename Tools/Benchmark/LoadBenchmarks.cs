@@ -14,16 +14,20 @@ public class LoadBenchmarks
     [ParamsSource(nameof(TreeTypes))]
     public string TreeType { get; set; } = string.Empty;
 
+    [Params(250_000)]
+    public int IntervalCount = 1;
+
     [GlobalSetup]
     public void GlobalSetup()
     {
-        const long RangeMin = 300_000_000_000;
-        const long RangeMax = 700_000_000_000;
-        var random = new Random(123123);
+        var random = new Random(123);
 
-        _ranges = Enumerable.Range(0, 300_000)
-            .Select(i => random.NextInt64(RangeMin / 1000, RangeMax / 1000))
-            .Select(i => (i * 1000, (i * 1000) + (random.Next(1, 3) * 1000) - 1, random.Next(10_000)))
+        var max = 10 * IntervalCount;
+        var maxIntervalSize = 2 * max / IntervalCount;
+
+        _ranges = Enumerable.Range(0, IntervalCount)
+            .Select(i => random.NextInt64(0, max))
+            .Select(i => (i, i + random.Next(1, maxIntervalSize), random.Next(10_000)))
             .ToList();
     }
 

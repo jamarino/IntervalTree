@@ -7,7 +7,6 @@ namespace Benchmark;
 [MemoryDiagnoser]
 public class QueryBenchmarks
 {
-    const int IntervalCount = 100_000;
     private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _treeCache = new();
     private Dictionary<string, IEnumerable<Interval<long, int>>> _dataCache = new();
 
@@ -18,6 +17,9 @@ public class QueryBenchmarks
 
     [Params("sparse", "medium", "dense")]
     public string DataType { get; set; } = string.Empty;
+
+    [Params(250_000)]
+    public int IntervalCount = 1;
 
     public IntervalTree.IIntervalTree<long, int> GetLoadedTree(string treeType, string dataType)
     {
@@ -46,7 +48,21 @@ public class QueryBenchmarks
     {
         var random = new Random(123);
         
+        // approx 20% coverage
         var sparse = Enumerable.Range(0, IntervalCount)
+            .Select(_ =>
+            {
+                var start = random.Next(25*IntervalCount);
+                return new Interval<long, int>(
+                    start,
+                    start + random.Next(1, 10),
+                    1);
+            })
+            .ToList();
+        _dataCache["sparse"] = sparse;
+
+        // approx 100% coverage
+        var medium = Enumerable.Range(0, IntervalCount)
             .Select(_ =>
             {
                 var start = random.Next(10*IntervalCount);
@@ -56,38 +72,27 @@ public class QueryBenchmarks
                     1);
             })
             .ToList();
-        _dataCache["sparse"] = sparse;
-
-        var medium = Enumerable.Range(0, IntervalCount)
-            .Select(_ =>
-            {
-                var start = random.Next(10*IntervalCount);
-                return new Interval<long, int>(
-                    start,
-                    start + random.Next(10, 200),
-                    1);
-            })
-            .ToList();
         _dataCache["medium"] = medium;
 
+        // approx 500% coverage
         var dense = Enumerable.Range(0, IntervalCount)
             .Select(_ =>
             {
                 var start = random.Next(10 * IntervalCount);
                 return new Interval<long, int>(
                     start,
-                    start + random.Next(100, 2000),
+                    start + random.Next(1, 100),
                     1);
             })
             .ToList();
         _dataCache["dense"] = dense;
     }
 
-    [Benchmark(OperationsPerInvoke = 10*IntervalCount)]
+    [Benchmark(OperationsPerInvoke = 10_000)]
     public void Query()
     {
         var tree = GetLoadedTree(TreeType, DataType);
-        for (var i = 0; i < IntervalCount * 10; i++)
+        for (var i = 0; i < 10_000; i++)
         {
             tree.Query(i);
         }
