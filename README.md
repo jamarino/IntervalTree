@@ -29,7 +29,7 @@ See performance section further down for more details.
 
 ```mermaid
 gantt
-    title Query performance - Queries/second (higher is better)
+    title Query performance - 1000 x queries/second
     dateFormat X
     axisFormat %s
 
