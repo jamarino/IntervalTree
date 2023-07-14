@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0 - 2023/07/12
+
+Added a type constraint on `TKey`, the 'from' and 'to components of the intervals, so that it must implement `IComparable<TKey>`.
+
+Most obvious types, int, double, decimal, long, etc. still work with this constraint, and query performance improved by 20-30%.
+
+## v0.4.0 - 2023/07/10
+
+Renamed project from LightIntervalTree to Jamarino.IntervalTree
+
 ## v0.3.0 - 2022/05/05
 
 Added:
