@@ -29,16 +29,16 @@ See performance section further down for more details.
 
 ```mermaid
 gantt
-    title Query performance - 1000 x queries/second
+    title Query performance - queries/second
     dateFormat X
     axisFormat %s
 
     section Quick
-    11366 : 0, 11366
+    13.30 mil : 0, 13304949
     section Light
-    7025 : 0, 7025
+    8.275 mil : 0, 8275405
     section Reference
-    1603  : 0, 1603
+    1.692 mil : 0, 1692734
 ```
 
 ### Initialization time
@@ -89,7 +89,7 @@ This tree is balanced on the first query. Adding new intervals causes the tree t
 
 This class trades a small amount of memory efficiency in favour of significantly faster queries. It is an implementation of a [Centered Interval Tree (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree). This is the same datastructure that [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree) implements.
 
-This datastructure requires building a search-tree separate from the intervals, which requires additional memory and initialisation time. The benefit is that much fewer key-comparison are required when querying the tree, especially in cases where intervals overlap.
+This datastructure requires building a search-tree separate from the intervals, which requires additional memory and initialisation time. The benefit is that far fewer key-comparison are required when querying the tree, especially in cases where intervals overlap.
 
 This tree is balanced on the first query. Adding new intervals causes the tree to re-initialise again on the next query.
 
@@ -97,7 +97,7 @@ This tree is balanced on the first query. Adding new intervals causes the tree t
 
 1. The feature set is currently quite limited, only adding intervals and querying for specific values is supported.
 
-1. `LightIntervalTree` is limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
+1. `LightIntervalTree` and `QuickIntervalTree` are limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
 
 ## Performance
 
@@ -145,17 +145,17 @@ Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicke
 
 | Method | TreeType  | DataType |       Mean | Allocated |
 |--------|-----------|----------|-----------:|----------:|
-| Query  | light     | dense    |  142.35 ns |     107 B |
-| Query  | light     | medium   |   98.11 ns |      60 B |
-| Query  | light     | sparse   |   82.78 ns |      40 B |
-| Query  | quick     | dense    |   87.98 ns |     107 B |
-| Query  | quick     | medium   |   79.01 ns |      60 B |
-| Query  | quick     | sparse   |   72.18 ns |      40 B |
-| Query  | reference | dense    |  623.72 ns |   1,256 B |
-| Query  | reference | medium   |  458.71 ns |     996 B |
-| Query  | reference | sparse   |  317.60 ns |     704 B |
+| Query  | light     | dense    |  120.84 ns |     107 B |
+| Query  | light     | medium   |   90.18 ns |      50 B |
+| Query  | light     | sparse   |   72.14 ns |      14 B |
+| Query  | quick     | dense    |   75.16 ns |     107 B |
+| Query  | quick     | medium   |   62.57 ns |      50 B |
+| Query  | quick     | sparse   |   52.13 ns |      14 B |
+| Query  | reference | dense    |  590.76 ns |   1,256 B |
+| Query  | reference | medium   |  454.76 ns |     996 B |
+| Query  | reference | sparse   |  321.63 ns |     704 B |
 
-`LightIntervalTree` is about 3-4 times quicker to query. `QuickIntervalTree` manages 4-7 times faster queries, and pulls ahead in dense datasets.
+`LightIntervalTree` is about 4-5 times quicker to query. `QuickIntervalTree` manages 6-8 times faster queries, and pulls ahead in dense datasets.
 
 ## Thread Safety
 
@@ -171,8 +171,6 @@ When using trees in a concurrent environment, please be sure to initialise the t
 * Consider adding a new auto-balancing tree
 * Add constructors that take a `capacity` hint
 * Add dotnet7 INumber<T> TKey constraint for improved performance (approx 2x query performance)
-* Replace recursive methods with iterative ones where possible
-* Experiment with interal data arrangement to improve indexing performance and data linearity
 
 ## Optimizations over RangeTree
 
