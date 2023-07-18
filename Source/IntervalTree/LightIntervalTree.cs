@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 
 namespace Jamarino.IntervalTree;
@@ -46,36 +45,52 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             var max = stack[stackIndex--];
             var min = stack[stackIndex--];
 
-            var center = (min + max + 1) / 2;
-            var interval = _intervals[center];
-
-            var compareMax = target.CompareTo(interval.Max);
-            if (compareMax > 0) continue; // target larger than Max, bail
-
-            if (center - min > 0)
+            var span = max - min;
+            if (span < 6) // At small subtree sizes a linear scan is faster
             {
+                for (var i = min; i <= max; i++)
+                {
+                    var interval = _intervals[i];
+
+                    var compareFrom = target.CompareTo(interval.From);
+                    if (compareFrom < 0)
+                        break;
+
+                    var compareTo = target.CompareTo(interval.To);
+                    if (compareTo > 0)
+                        continue;
+
+                    results ??= new List<TValue>();
+                    results.Add(interval.Value);
+                }
+            }
+            else
+            {
+                var center = (min + max + 1) / 2;
+                var interval = _intervals[center];
+
+                var compareMax = target.CompareTo(interval.Max);
+                if (compareMax > 0) continue; // target larger than Max, bail
+
                 // search left
                 stack[++stackIndex] = min;
-                stack[++stackIndex] = center - 1; 
-            }
+                stack[++stackIndex] = center - 1;
 
-            // check current node
-            var compareFrom = target.CompareTo(interval.From);
-            var compareTo = target.CompareTo(interval.To);
+                // check current node
+                var compareFrom = target.CompareTo(interval.From);
+                var compareTo = target.CompareTo(interval.To);
 
-            if (compareFrom >= 0 && compareTo <= 0)
-            {
-                results ??= new List<TValue>();
-                results.Add(interval.Value);
-            }
+                if (compareFrom >= 0 && compareTo <= 0)
+                {
+                    results ??= new List<TValue>();
+                    results.Add(interval.Value);
+                }
 
-            if (compareFrom < 0) continue; // target smaller than From, bail
+                if (compareFrom < 0) continue; // target smaller than From, bail
 
-            if (max - center > 0)
-            {
                 // search right
                 stack[++stackIndex] = center + 1;
-                stack[++stackIndex] = max; 
+                stack[++stackIndex] = max;
             }
         }
 

@@ -25,6 +25,8 @@ tree.Query(150); // result is {1, 2, 3}
 
 See performance section further down for more details.
 
+The following graphs are based on benchmarks of trees with 250000 dense intervals.
+
 ### Query performance
 
 ```mermaid
@@ -36,7 +38,7 @@ gantt
     section Quick
     13.30 mil : 0, 13304949
     section Light
-    8.275 mil : 0, 8275405
+    9.653 mil : 0, 9653441
     section Reference
     1.692 mil : 0, 1692734
 ```
@@ -145,9 +147,9 @@ Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicke
 
 | Method | TreeType  | DataType |       Mean | Allocated |
 |--------|-----------|----------|-----------:|----------:|
-| Query  | light     | dense    |  120.84 ns |     107 B |
-| Query  | light     | medium   |   90.18 ns |      50 B |
-| Query  | light     | sparse   |   72.14 ns |      14 B |
+| Query  | light     | dense    |  103.59 ns |     107 B |
+| Query  | light     | medium   |   80.23 ns |      50 B |
+| Query  | light     | sparse   |   66.03 ns |      14 B |
 | Query  | quick     | dense    |   75.16 ns |     107 B |
 | Query  | quick     | medium   |   62.57 ns |      50 B |
 | Query  | quick     | sparse   |   52.13 ns |      14 B |
@@ -155,7 +157,7 @@ Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicke
 | Query  | reference | medium   |  454.76 ns |     996 B |
 | Query  | reference | sparse   |  321.63 ns |     704 B |
 
-`LightIntervalTree` is about 4-5 times quicker to query. `QuickIntervalTree` manages 6-8 times faster queries, and pulls ahead in dense datasets.
+`LightIntervalTree` is about 4-6 times quicker to query. `QuickIntervalTree` manages 6-8 times faster queries, and pulls ahead in dense datasets.
 
 ## Thread Safety
 
@@ -177,13 +179,15 @@ When using trees in a concurrent environment, please be sure to initialise the t
 A few key design decisions were made to reduce the memory usage.
 
 1. Avoid keeping duplicate data
-    * `RangeTree` keeps a full copy of intervals, in case the tree needs to be rebuilt following the addition or removal of an interval. `LightIntervalTree` only stores intervals as part of the underlying tree structure.
+    * `RangeTree` keeps a full, unused copy of intervals, in case the tree needs to be rebuilt following the addition or removal of an interval.
+    * `LightIntervalTree` only stores intervals once, embedding tree information directly into the stored intervals.
+    * `QuickIntervalTree` directly uses the stored intervals, but also duplicates part of the intervals in order to store a reverse-order, needed to optimize searching.
 1. Model tree nodes as value types (`struct`) rather than objects (`class`)
     * Objects suffer memory overhead in the form of type and method information
     * Since `struct`s cannot reference themselves an index (`int`) is used to reference other nodes
 1. Store nodes and intervals in indexable arrays, use indexes rather than references as pointers
     * Pointers in 64-bit systems take up 8 bytes of storage, `int`s only take 4 bytes
-    * Storing value types in Lists/Arrays may improve CPU caching since elements are co-located
-1. Nodes store their intervals in linked lists
-    * Nodes use indexes to point to the first interval in their list. Each interval stores an additional index pointing to the next interval (if present) to form a "linked list".
-    * For sparse trees this means that the majority of nodes will be storing two ints (one in the node and one in the single interval for that node) as opposed to allocating a 1-length array and storing an 8 byte pointer to said array.
+    * Storing value types in Lists/Arrays improves CPU caching since elements are co-located in memory
+1. Nodes reference their intervals by index and length
+    * Rather than allocating an array object for each node to store intervals in, all intervals are stored in a single array. All related intervals are grouped, and each node keeps an index and count to point to the related intervals.
+    * For sparse trees this means that the majority of nodes will be storing two ints as opposed to allocating a 1-length array and storing an 8 byte pointer to said array.
