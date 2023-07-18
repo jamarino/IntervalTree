@@ -8,6 +8,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private Interval<TKey, TValue>[] _intervals = new Interval<TKey, TValue>[16];
     private int _intervalCount = 0;
     private IntervalHalf[] _intervalsDescending = Array.Empty<IntervalHalf>();
+    private int _treeHeight;
     private List<Node> _nodes = new();
     private bool _isBuilt = false;
 
@@ -40,17 +41,19 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_isBuilt is false)
             Build();
 
-        var result = new List<TValue>();
-        QueryRec(result, 1, target);
-        return result;
+        List<TValue>? result = null;
 
-        void QueryRec(List<TValue> result, int nodeIndex, TKey target)
+        Span<int> stack = stackalloc int[_treeHeight];
+        stack[0] = 1;
+        var stackIndex = 0;
+
+        while (stackIndex >= 0)
         {
-            if (nodeIndex >= _nodes.Count) throw new IndexOutOfRangeException("nodeIndex outside of range of _nodes"); // this should not happen...
-
+            var nodeIndex = stack[stackIndex--];
+            
             var node = _nodes[nodeIndex];
 
-            if (node.IntervalCount == 0) return;
+            if (node.IntervalCount == 0) continue;
 
             var centerComparison = target.CompareTo(node.Center);
 
@@ -63,6 +66,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var intv = _intervals[i];
                     if (target.CompareTo(intv.From) >= 0)
                     {
+                        result ??= new List<TValue>();
                         result.Add(intv.Value);
                     }
                     else
@@ -72,7 +76,10 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 }
 
                 if (node.Next is not 0)
-                    QueryRec(result, node.Next, target);
+                {
+                    // queue left child
+                    stack[++stackIndex] = node.Next;
+                }
             }
             else if (centerComparison > 0)
             {
@@ -83,6 +90,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var half = _intervalsDescending[i];
                     if (target.CompareTo(half.Start) <= 0)
                     {
+                        result ??= new List<TValue>();
                         result.Add(half.Value);
                     }
                     else
@@ -92,7 +100,10 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 }
 
                 if (node.Next is not 0)
-                    QueryRec(result, node.Next + 1, target);
+                {
+                    // queue right child
+                    stack[++stackIndex] = node.Next + 1;
+                }
             }
             else
             {
@@ -101,21 +112,25 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var intv = _intervals[i];
+                    result ??= new List<TValue>();
                     result.Add(intv.Value);
                 }
             }
         }
+
+        return result ?? Enumerable.Empty<TValue>();
     }
 
     private void Build()
     {
         _nodes = new() { new Node(), new Node() };
         _intervalsDescending = new IntervalHalf[_intervalCount];
-
+        
         Array.Sort(_intervals, 0, _intervalCount);
 
         BuildRec(0, _intervalCount - 1, 1);
 
+        _treeHeight = (int)Math.Log(_nodes.Count, 2) + 1;
         _isBuilt = true;
 
         void BuildRec(int min, int max, int nodeIndex)
@@ -150,8 +165,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 }
                 else if (interval.To.CompareTo(centerValue) >= 0)
                 {
-                    // overlapping interval, add the desending half
-                    //_intervalsDescending[intervalIndex] = new IntervalHalf(interval.To, interval.Value);
+                    // overlapping interval, add the desending half later
                     nodeIntervalCount++;
                 }
                 else
@@ -251,7 +265,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         public readonly TKey Start;
         public readonly TValue Value;
 
-        public int CompareTo(QuickIntervalTree<TKey, TValue>.IntervalHalf other)
+        public int CompareTo(IntervalHalf other)
         {
             return Start.CompareTo(other.Start);
         }

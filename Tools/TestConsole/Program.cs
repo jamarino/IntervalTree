@@ -79,4 +79,45 @@ app.AddCommand("memtest", (
     }
 });
 
+app.AddCommand("maxsize", (
+    [Argument]
+    string treeType
+    ) =>
+{
+    var size = 1000;
+    var prevSizeChange = 1000;
+
+    while(true)
+    {
+        try
+        {
+            // init tree
+            Console.WriteLine($"Trying size: {size}");
+            var tree = TreeFactory.CreateEmptyTree<long, long>(treeType);
+
+            // load tree
+            for (int i = 0; i < size; i++)
+            {
+                tree.Add(i, i + 1, i);
+            }
+
+            // build
+            tree.Query(1);
+
+            // no boom?
+            var tmp = size;
+            size = size + prevSizeChange;
+            prevSizeChange = tmp;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            Console.WriteLine(e.StackTrace);
+
+            prevSizeChange /= 2;
+            size = size - prevSizeChange;
+        }
+    }
+});
+
 await app.RunAsync();
