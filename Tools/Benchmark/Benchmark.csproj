@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Source\ValueEnumerable\ValueEnumerable.csproj" />
     <ProjectReference Include="..\Extras\Extras.csproj" />
     <ProjectReference Include="..\..\Source\IntervalTree\IntervalTree.csproj" />
   </ItemGroup>
