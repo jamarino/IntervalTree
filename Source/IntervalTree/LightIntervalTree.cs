@@ -97,7 +97,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
-    private void Build()
+    public void Build()
     {
         if (_intervals.Count is 0)
         {

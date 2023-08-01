@@ -121,7 +121,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return result ?? Enumerable.Empty<TValue>();
     }
 
-    private void Build()
+    public void Build()
     {
         _nodes = new() { new Node(), new Node() };
         _intervalsDescending = new IntervalHalf[_intervalCount];
