@@ -13,7 +13,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private readonly List<AugmentedInterval> _intervals = new();
     private bool _isBuilt = false;
     private int _treeHeight = 0;
-    private int _treeSizeFull = 0;
 
     public int Count => _intervals.Count;
 
@@ -44,7 +43,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_isBuilt is false)
             Build();
 
-        if (_treeSizeFull is 0)
+        if (_intervals.Count == 0)
             return Enumerable.Empty<TValue>();
 
         List<TValue>? results = null;
@@ -121,7 +120,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_intervals.Count is 0)
         {
             _treeHeight = 0;
-            _treeSizeFull = 0;
             _isBuilt = true;
             return;
         }
@@ -129,7 +127,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         // order intervals
         _intervals.Sort();
         _treeHeight = (int)Math.Log(_intervals.Count, 2) + 1;
-        _treeSizeFull = (1 << _treeHeight) - 1;
 
         UpdateMaxRec(0, _intervals.Count - 1);
 
