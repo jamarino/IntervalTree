@@ -10,7 +10,7 @@ namespace Jamarino.IntervalTree;
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
-    private readonly List<OrderedInterval> _intervals = new();
+    private readonly List<AugmentedInterval> _intervals = new();
     private bool _isBuilt = false;
     private int _treeHeight = 0;
     private int _treeSizeFull = 0;
@@ -24,7 +24,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     /// </summary>
     public void Add(TKey from, TKey to, TValue value)
     {
-        _intervals.Add(new OrderedInterval(from, to, to, value));
+        _intervals.Add(new AugmentedInterval(from, to, to, value));
         _isBuilt = false;
     }
 
@@ -175,9 +175,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         }
     }
 
-    private record struct OrderedInterval : IComparable<OrderedInterval>
+    private record struct AugmentedInterval : IComparable<AugmentedInterval>
     {
-        public OrderedInterval(TKey from, TKey to, TKey max, TValue value)
+        public AugmentedInterval(TKey from, TKey to, TKey max, TValue value)
         {
             From = from;
             To = to;
@@ -190,7 +190,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         public TKey Max;
         public TValue Value;
 
-        public int CompareTo(OrderedInterval other)
+        public int CompareTo(AugmentedInterval other)
         {
             var fromComparison = From.CompareTo(other.From);
             if (fromComparison != 0)
