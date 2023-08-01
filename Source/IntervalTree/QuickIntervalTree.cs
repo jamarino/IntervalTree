@@ -2,6 +2,12 @@ using System.Collections;
 
 namespace Jamarino.IntervalTree;
 
+/// <summary>
+/// Query-optimized interval tree. Implementation is based on a centered interval tree.
+/// Each interval is stored twice, and so the memory usage is higher than that of <seealso cref="LightIntervalTree"/>.
+/// </summary>
+/// <typeparam name="TKey">Type used to specify the start and end of each intervals</typeparam>
+/// <typeparam name="TValue">Type of the value associated with each interval</typeparam>
 public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
@@ -22,6 +28,9 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+    /// <summary>
+    /// Add an interval to the tree. Note that the tree will be rebuilt on the next query.
+    /// </summary>
     public void Add(TKey from, TKey to, TValue value)
     {
         if (_intervalCount == _intervals.Length)
@@ -36,6 +45,12 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         _isBuilt = false;
     }
 
+    /// <summary>
+    /// Find the values associated with all intervals containing the provided target value.
+    /// Note that the tree will first be built if required.
+    /// </summary>
+    /// <param name="target">The value to test against stored intervals</param>
+    /// <returns>Values associated with matching intervals</returns>
     public IEnumerable<TValue> Query(TKey target)
     {
         if (_isBuilt is false)
@@ -121,6 +136,11 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return result ?? Enumerable.Empty<TValue>();
     }
 
+    /// <summary>
+    /// Build the underlying tree structure.
+    /// A build is automatically performed, if needed, on the first query after altering the tree.
+    /// This operation takes O(n log n) time. 
+    /// </summary>
     public void Build()
     {
         _nodes = new() { new Node(), new Node() };

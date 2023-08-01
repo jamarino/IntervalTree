@@ -2,6 +2,11 @@ using System.Collections;
 
 namespace Jamarino.IntervalTree;
 
+/// <summary>
+/// Light-weight interval tree implementation, based on an augmented interval tree.
+/// </summary>
+/// <typeparam name="TKey">Type used to specify the start and end of each intervals</typeparam>
+/// <typeparam name="TValue">Type of the value associated with each interval</typeparam>
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
@@ -14,6 +19,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Values => _intervals.Select(i => i.Value);
 
+    /// <summary>
+    /// Add an interval to the tree. Note that the tree will be rebuilt on the next query.
+    /// </summary>
     public void Add(TKey from, TKey to, TValue value)
     {
         _intervals.Add(new OrderedInterval(from, to, to, value));
@@ -25,6 +33,12 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+    /// <summary>
+    /// Find the values associated with all intervals containing the provided target value.
+    /// Note that the tree will first be built if required.
+    /// </summary>
+    /// <param name="target">The value to test against stored intervals</param>
+    /// <returns>Values associated with matching intervals</returns>
     public IEnumerable<TValue> Query(TKey target)
     {
         if (_isBuilt is false)
@@ -97,6 +111,11 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
+    /// <summary>
+    /// Build the underlying tree structure.
+    /// A build is automatically performed, if needed, on the first query after altering the tree.
+    /// This operation takes O(n log n) time. 
+    /// </summary>
     public void Build()
     {
         if (_intervals.Count is 0)
