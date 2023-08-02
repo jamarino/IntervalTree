@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.0 - Unreleased
+
+* Build-methods made public
+* DocXml added for classes and most important methods
+* Added constructors with capacity hint for reduced allocations when approximate number of intervals is known ahead of time
+
 ## v0.7.0 - 2023/07/18
 
 Query performance of LightIntervalTree improved by a further 15% in dense benchmarks, by switching to a naive linear scan of intervals when subtree size falls to just a handful of intervals.
@@ -12,7 +18,7 @@ Note: netstandard2.0 now requires System.Memory for Span<>
 
 ## v0.5.0 - 2023/07/12
 
-Added a type constraint on `TKey`, the 'from' and 'to components of the intervals, so that it must implement `IComparable<TKey>`.
+Added a type constraint on `TKey`, the 'from' and 'to' components of the intervals, so that it must implement `IComparable<TKey>`.
 
 Most obvious types, int, double, decimal, long, etc. still work with this constraint, and query performance improved by 20-30%.
 
