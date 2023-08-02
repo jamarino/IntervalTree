@@ -11,12 +11,17 @@ namespace Jamarino.IntervalTree;
 public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
-    private Interval<TKey, TValue>[] _intervals = new Interval<TKey, TValue>[16];
+    private Interval<TKey, TValue>[] _intervals;
     private int _intervalCount = 0;
     private IntervalHalf[] _intervalsDescending = Array.Empty<IntervalHalf>();
     private int _treeHeight;
     private List<Node> _nodes = new();
     private bool _isBuilt = false;
+
+    public QuickIntervalTree(int? initialCapacity = null)
+    {
+        _intervals = new Interval<TKey, TValue>[initialCapacity ?? 32];
+    }
 
     public int Count => _intervalCount;
 
@@ -144,8 +149,17 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     /// </summary>
     public void Build()
     {
-        _nodes = new() { new Node(), new Node() };
-        _intervalsDescending = new IntervalHalf[_intervalCount];
+        // reset tree
+        _nodes.Clear();
+
+        // Add 'null' node and root
+        _nodes.Add(new Node()); // 0-index: 'null'
+        _nodes.Add(new Node()); // 1-index: root
+
+        // ensure descending intervals array is large enough, but not too large
+        if (_intervalsDescending.Length <  _intervals.Length ||
+            _intervalsDescending.Length > 2 * _intervals.Length)
+            _intervalsDescending = new IntervalHalf[_intervals.Length];
         
         Array.Sort(_intervals, 0, _intervalCount);
 

@@ -10,9 +10,14 @@ namespace Jamarino.IntervalTree;
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
-    private readonly List<AugmentedInterval> _intervals = new();
+    private readonly List<AugmentedInterval> _intervals;
     private bool _isBuilt = false;
     private int _treeHeight = 0;
+
+    public LightIntervalTree(int? initialCapacity = null)
+    {
+        _intervals = new List<AugmentedInterval>(initialCapacity ?? 16);
+    }
 
     public int Count => _intervals.Count;
 
