@@ -17,6 +17,9 @@ public class LoadBenchmarks
     [Params(250_000)]
     public int IntervalCount = 1;
 
+    [Params(true, false)]
+    public bool CapacityHint = false;
+
     [GlobalSetup]
     public void GlobalSetup()
     {
@@ -34,7 +37,10 @@ public class LoadBenchmarks
     [Benchmark]
     public void Load()
     {
-        var tree = TreeFactory.CreateEmptyTree<long, int>(TreeType);
+        var tree = CapacityHint ?
+            TreeFactory.CreateEmptyTree<long, int>(TreeType, IntervalCount) :
+            TreeFactory.CreateEmptyTree<long, int>(TreeType);
+
         foreach (var (from, to, val) in _ranges)
         {
             tree.Add(from, to, val);

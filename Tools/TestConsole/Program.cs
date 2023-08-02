@@ -9,6 +9,7 @@ var app = builder.Build();
 app.AddCommand("memtest", (
     [Argument]
     string treeType,
+    int? treeCapacity,
     int? seed,
     int? count,
     long? intervalMax,
@@ -41,7 +42,10 @@ app.AddCommand("memtest", (
 
     while (trees.Count < treesMax.Value)
     {
-        var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+        var tree = treeCapacity is not null ?
+            TreeFactory.CreateEmptyTree<long, int>(treeType, treeCapacity) :
+            TreeFactory.CreateEmptyTree<long, int>(treeType);
+        
         trees.Add(tree);
 
         for (int i = 0; i < count.Value; i++)

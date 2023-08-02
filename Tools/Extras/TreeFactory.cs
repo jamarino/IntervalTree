@@ -16,12 +16,23 @@ public static class TreeFactory
         "quick",
     };
 
-    public static IntervalTree.IIntervalTree<TKey, TValue> CreateEmptyTree<TKey, TValue>(string type) where TKey : IComparable<TKey>
-        => type switch
+    public static IntervalTree.IIntervalTree<TKey, TValue> CreateEmptyTree<TKey, TValue>(string type, int? capacity = null) where TKey : IComparable<TKey>
+    {
+        if (capacity is not null)
+            return type switch
+            {
+                "reference" => new IntervalTree.IntervalTree<TKey, TValue>(),
+                "light" => new TreeAdapter<TKey, TValue>(new LightIntervalTree<TKey, TValue>(capacity)),
+                "quick" => new TreeAdapter<TKey, TValue>(new QuickIntervalTree<TKey, TValue>(capacity)),
+                _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
+            };
+
+        return type switch
         {
             "reference" => new IntervalTree.IntervalTree<TKey, TValue>(),
             "light" => new TreeAdapter<TKey, TValue>(new LightIntervalTree<TKey, TValue>()),
             "quick" => new TreeAdapter<TKey, TValue>(new QuickIntervalTree<TKey, TValue>()),
             _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
         };
+    }
 }
