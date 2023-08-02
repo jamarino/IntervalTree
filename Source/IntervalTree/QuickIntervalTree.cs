@@ -138,6 +138,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     /// <summary>
     /// Build the underlying tree structure.
+    /// This operation is NOT thread safe.
     /// A build is automatically performed, if needed, on the first query after altering the tree.
     /// This operation takes O(n log n) time. 
     /// </summary>
