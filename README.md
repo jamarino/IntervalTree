@@ -1,6 +1,6 @@
 # Jamarino.IntervalTree
 
-A light-weight, performant interval tree in C#. Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations. `RangeTree` is still a great option if you need a fully featured interval tree.
+A light-weight, performant interval tree written in C#. Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations. `RangeTree` is still a great option if you need a fully featured interval tree.
 
 ## Example
 
@@ -23,15 +23,17 @@ tree.Query(150); // result is {1, 2, 3}
 
 ## Performance TLDR;
 
-See performance section further down for more details.
+The following graphs are based on benchmarks of trees with 250,000 dense intervals.
 
-The following graphs are based on benchmarks of trees with 250000 dense intervals.
+Runs marked with 'hint' were provided a capacity hint to initialize the trees to an appropriate size.
+
+See performance section further down for more details.
 
 ### Query performance
 
 ```mermaid
 gantt
-    title Query performance - queries/second
+    title Query performance @ 250k intervals - queries/second
     dateFormat X
     axisFormat %s
 
@@ -47,30 +49,38 @@ gantt
 
 ```mermaid
 gantt
-    title Initialization time - miliseconds (lower is better)
+    title Initialization time @ 250k intervals - miliseconds (lower is better) 
     dateFormat X
     axisFormat %s
 
     section Quick
-    39 : 0, 39
+    66 : 0, 66
+    section Quick (hint)
+    63 : 0, 63
     section Light
-    23 : 0, 23
+    42 : 0, 42
+    section Light (hint)
+    37 : 0, 37
     section Reference
-    344  : 0, 344
+    669  : 0, 669
 ```
 
 ### Initialization memory allocation
 
 ```mermaid
 gantt
-    title Initialization memory allocation - megabytes (lower is better)
+    title Initialization memory allocation @ 250k intervals - megabytes (lower is better)
     dateFormat X
     axisFormat %s
 
     section Quick
-    32 : 0, 32
+    33 : 0, 33
+    section Quick (hint)
+    26 : 0, 26
     section Light
     16 : 0, 16
+    section Light (hint)
+    8 : 0, 8
     section Reference
     342  : 0, 342
 ```
@@ -79,7 +89,7 @@ gantt
 
 This package currently offers two different interval tree implementations - `LightIntervalTree` and `QuickIntervalTree` - the former being the most memory-efficient and the latter using a bit more memory in exchange for some significant performance gains. Read on for more details and benchmarks.
 
-### `LightIntervalTree`
+### LightIntervalTree
 
 This class is all about memory efficiency. It implements an [Augmented Interval Tree (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Augmented_tree) which forms a simple binary search tree from the intervals and only requires storing one extra property (a subtree max-value) with each interval.
 
@@ -87,7 +97,7 @@ The simplicity of this tree makes it light and quick to initialise, but querying
 
 This tree is balanced on the first query. Adding new intervals causes the tree to re-initialise again on the next query.
 
-### `QuickIntervalTree`
+### QuickIntervalTree
 
 This class trades a small amount of memory efficiency in favour of significantly faster queries. It is an implementation of a [Centered Interval Tree (Wikipedia)](https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree). This is the same datastructure that [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree) implements.
 
@@ -109,53 +119,57 @@ Benchmarking memory usage is tricky. There are many different measures of memory
 
 Nevertheless, this repository includes a `TestConsole` program which will create a number of trees (configurable) and print memory usage between each tree loaded. The measurement is taken using `Process.PrivateMemorySize64` [(Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.privatememorysize64?view=net-6.0).
 
-The following table contains the change in memory usage measured between loading 10 trees consecutively using `TestConsole`. The test is run with 1.000.000 intervals per tree.
+The following table contains the change in memory usage measured between loading 10 trees consecutively using `TestConsole`. The test is run with 1 million intervals per tree.
 
-| Tree No. | RangeTree (reference) | LightIntervalTree | QuickIntervalTree |
-|---------:|----------------------:|------------------:|------------------:|
-|        1 |                251 MB |             68 MB |             60 MB |
-|        2 |                102 MB |             32 MB |             65 MB |
-|        3 |                -14 MB |             33 MB |             71 MB |
-|        4 |                135 MB |             63 MB |             34 MB |
-|        5 |                -67 MB |             32 MB |             57 MB |
-|        6 |                 98 MB |             32 MB |             57 MB |
-|        7 |                220 MB |             63 MB |             55 MB |
-|        8 |                140 MB |             41 MB |             24 MB |
-|        9 |                -72 MB |             32 MB |             42 MB |
-|       10 |                134 MB |             32 MB |             66 MB |
+| Tree No. | Reference | Light | Light (hint) | Quick | Quick (hint) |
+| -------: | --------: | ----: | -----------: | ----: | -----------: |
+|        1 |    139 MB | 68 MB |        30 MB | 55 MB |        52 MB |
+|        2 |     70 MB | 32 MB |        34 MB | 66 MB |        44 MB |
+|        3 |     99 MB | 34 MB |        30 MB | 67 MB |        41 MB |
+|        4 |     37 MB | 63 MB |        30 MB | 38 MB |        47 MB |
+|        5 |    103 MB | 32 MB |        31 MB | 58 MB |        41 MB |
+|        6 |    281 MB | 32 MB |        30 MB | 64 MB |        41 MB |
+|        7 |     41 MB | 63 MB |        30 MB | 62 MB |        41 MB |
+|        8 |    -40 MB |  9 MB |        30 MB | 24 MB |        44 MB |
+|        9 |     30 MB | 32 MB |        30 MB | 40 MB |        44 MB |
+|       10 |    112 MB | 55 MB |        30 MB | 58 MB |        44 MB |
 
-| Metric     | RangeTree (reference) | LightIntervalTree | QuickIntervalTree |
-|------------|----------------------:|------------------:|------------------:|
-| Avg change |                 92 MB |             43 MB |             53 MB |
-| Max change |                251 MB |             68 MB |             71 MB |
+| Metric     | Reference | Light | Light (hint) | Quick | Quick (hint) |
+| ---------- | --------: | ----: | -----------: | ----: | -----------: |
+| Avg change |     87 MB | 42 MB |        31 MB | 53 MB |        44 MB |
+| Max change |    281 MB | 68 MB |        34 MB | 67 MB |        52 MB |
+
+Runs marked with 'hint' were provided a capacity hint to initialize the trees to an appropriate size. This feature is only relevant when the number of intervals is known before creating the tree. The reference solution does not support capacity hints.
 
 It is clear that both `LightIntervalTree` and `QuickIntervalTree` offer better memory efficiency on average, compared to `RangeTree`. Additionally, memory growth is much more stable. Only a few objects are allocated per tree, and these are mostly long-lived and don't require (immediate) garbage collection. As a result, loading a tree does not cause a large spike in memory use and GC collections.
 
 ### Load 250.000 sparse intervals
 
-| Method |  TreeType |      Mean | Allocated |
-|------- |---------- |----------:|----------:|
-|   Load |     light |  22.87 ms |     16 MB |
-|   Load |     quick |  39.24 ms |     32 MB |
-|   Load | reference | 344.34 ms |    342 MB |
+| TreeType     |      Mean | Allocated |
+| ------------ | --------: | --------: |
+| light (hint) |  37.65 ms |      8 MB |
+| light        |  42.29 ms |     16 MB |
+| quick (hint) |  63.56 ms |     26 MB |
+| quick        |  66.44 ms |     33 MB |
+| reference    | 669.57 ms |    342 MB |
 
 Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicker, but also allocates a lot fewer objects / less memory in the process. This means less work for the GC and reduces potential spikes in memory usage.
 
 > Note: "Allocated" memory is different from memory usage. It describes to total amount of memory written, not how much was ultimately kept.
 
-###  Query trees of 250.000 intervals
+### Query trees of 250.000 intervals
 
-| Method | TreeType  | DataType |       Mean | Allocated |
-|--------|-----------|----------|-----------:|----------:|
-| Query  | light     | dense    |  103.59 ns |     107 B |
-| Query  | light     | medium   |   80.23 ns |      50 B |
-| Query  | light     | sparse   |   66.03 ns |      14 B |
-| Query  | quick     | dense    |   75.16 ns |     107 B |
-| Query  | quick     | medium   |   62.57 ns |      50 B |
-| Query  | quick     | sparse   |   52.13 ns |      14 B |
-| Query  | reference | dense    |  590.76 ns |   1,256 B |
-| Query  | reference | medium   |  454.76 ns |     996 B |
-| Query  | reference | sparse   |  321.63 ns |     704 B |
+| TreeType  | DataType |      Mean | Allocated |
+| --------- | -------- | --------: | --------: |
+| light     | dense    | 103.59 ns |     107 B |
+| light     | medium   |  80.23 ns |      50 B |
+| light     | sparse   |  66.03 ns |      14 B |
+| quick     | dense    |  75.16 ns |     107 B |
+| quick     | medium   |  62.57 ns |      50 B |
+| quick     | sparse   |  52.13 ns |      14 B |
+| reference | dense    | 590.76 ns |   1,256 B |
+| reference | medium   | 454.76 ns |     996 B |
+| reference | sparse   | 321.63 ns |     704 B |
 
 `LightIntervalTree` is about 4-6 times quicker to query. `QuickIntervalTree` manages 6-8 times faster queries, and pulls ahead in dense datasets.
 
@@ -171,7 +185,6 @@ When using trees in a concurrent environment, please be sure to initialise the t
 * Implement method for querying a range
 * Implement remove methods
 * Consider adding a new auto-balancing tree
-* Add constructors that take a `capacity` hint
 * Add dotnet7 INumber<T> TKey constraint for improved performance (approx 2x query performance)
 
 ## Optimizations over RangeTree
