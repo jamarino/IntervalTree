@@ -142,6 +142,109 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     }
 
     /// <summary>
+    /// Find the values associated with all intervals overlapping the provided range.
+    /// Note that the tree will first be built if required.
+    /// </summary>
+    /// <param name="target">The value to test against stored intervals</param>
+    /// <returns>Values associated with matching intervals</returns>
+    public IEnumerable<TValue> Query(TKey low, TKey high)
+    {
+        if (high.CompareTo(low) < 0)
+            throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
+
+        if (_isBuilt is false)
+            Build();
+
+        List<TValue>? result = null;
+
+        Span<int> stack = stackalloc int[_treeHeight];
+        stack[0] = 1;
+        var stackIndex = 0;
+
+        while (stackIndex >= 0)
+        {
+            var nodeIndex = stack[stackIndex--];
+
+            var node = _nodes[nodeIndex];
+
+            if (node.IntervalCount == 0) continue;
+
+            //var centerComparison = target.CompareTo(node.Center);
+            var compareLow = low.CompareTo(node.Center);
+            var compareHigh = high.CompareTo(node.Center);
+
+            if (compareHigh < 0)
+            {
+                // look left
+                // test node intervals for overlap
+                for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
+                {
+                    var intv = _intervals[i];
+                    if (high.CompareTo(intv.From) >= 0)
+                    {
+                        result ??= new List<TValue>();
+                        result.Add(intv.Value);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (node.Next is not 0)
+                {
+                    // queue left child
+                    stack[++stackIndex] = node.Next;
+                }
+            }
+            else if (compareLow > 0)
+            {
+                // look right
+                // test node intervals for overlap
+                for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
+                {
+                    var half = _intervalsDescending[i];
+                    if (low.CompareTo(half.Start) <= 0)
+                    {
+                        result ??= new List<TValue>();
+                        result.Add(half.Value);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (node.Next is not 0)
+                {
+                    // queue right child
+                    stack[++stackIndex] = node.Next + 1;
+                }
+            }
+            else
+            {
+                // add all node intervals
+                for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
+                {
+                    var intv = _intervals[i];
+                    result ??= new List<TValue>();
+                    result.Add(intv.Value);
+                }
+
+                if (node.Next is not 0)
+                {
+                    // queue left child
+                    stack[++stackIndex] = node.Next;
+                    // queue right child
+                    stack[++stackIndex] = node.Next + 1;
+                }
+            }
+        }
+
+        return result ?? Enumerable.Empty<TValue>();
+    }
+
+    /// <summary>
     /// Build the underlying tree structure.
     /// This operation is NOT thread safe.
     /// A build is automatically performed, if needed, on the first query after altering the tree.

@@ -10,4 +10,6 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     void Add(TKey from, TKey to, TValue value);
 
     IEnumerable<TValue> Query(TKey key);
+
+    IEnumerable<TValue> Query(TKey low, TKey high);
 }
