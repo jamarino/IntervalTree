@@ -1,10 +1,11 @@
 # Changelog
 
-## v0.8.0 - Unreleased
+## v0.8.0 - 2023/08/06
 
 * Build-methods made public
 * DocXml added for classes and most important methods
 * Added constructors with capacity hint for reduced allocations when approximate number of intervals is known ahead of time
+* Added methods for querying ranges
 
 ## v0.7.0 - 2023/07/18
 

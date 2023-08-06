@@ -6,24 +6,29 @@ A light-weight, performant interval tree written in C#. Heavily inspired by [Ran
 
 ```csharp
 // create a tree
-var tree = new LightIntervalTree<short, short>();
+var tree = new LightIntervalTree<int, short>();
 
-// add intervals
-tree.Add(100, 200, 1);
-tree.Add(120, 150, 2);
-tree.Add(110, 250, 3);
+// add intervals (from, to, value)
+tree.Add(10, 30, 1);
+tree.Add(20, 40, 2);
+tree.Add(25, 35, 3);
 
 // query
-tree.Query(105); // result is {1}
-tree.Query(110); // result is {1, 3}
-tree.Query(150); // result is {1, 2, 3}
+tree.Query(11); // result is {1}
+tree.Query(32); // result is {2, 3}
+tree.Query(27); // result is {1, 2, 3}
+
+// query range
+tree.Query(5, 20) // result is {1, 2}
+tree.Query(26, 28) // result is {1, 2, 3}
+tree.Query(1, 50) // result is {1, 2, 3}
 
 // note that result order is not guaranteed
 ```
 
 ## Performance TLDR;
 
-The following graphs are based on benchmarks of trees with 250,000 dense intervals.
+The following graphs are based on benchmarks of dense trees with 250,000 intervals.
 
 Runs marked with 'hint' were provided a capacity hint to initialize the trees to an appropriate size.
 
@@ -182,8 +187,8 @@ When using trees in a concurrent environment, please be sure to initialise the t
 
 ## TODO list
 
-* Implement method for querying a range
 * Implement remove methods
+* Use a value-type enumerable return type to avoid allocations for empty/small results
 * Consider adding a new auto-balancing tree
 * Add dotnet7 INumber<T> TKey constraint for improved performance (approx 2x query performance)
 
@@ -192,15 +197,22 @@ When using trees in a concurrent environment, please be sure to initialise the t
 A few key design decisions were made to reduce the memory usage.
 
 1. Avoid keeping duplicate data
-    * `RangeTree` keeps a full, unused copy of intervals, in case the tree needs to be rebuilt following the addition or removal of an interval.
-    * `LightIntervalTree` only stores intervals once, embedding tree information directly into the stored intervals.
-    * `QuickIntervalTree` directly uses the stored intervals, but also duplicates part of the intervals in order to store a reverse-order, needed to optimize searching.
+
+    `RangeTree` keeps a full, unused copy of intervals, in case the tree needs to be rebuilt following the addition or removal of an interval. This wastes memory.
+    `LightIntervalTree` only stores intervals once, embedding tree information directly into the stored intervals. `QuickIntervalTree` directly uses the stored intervals, but also duplicates part of the intervals in order to store a reverse-order, needed to optimize searching.
+
 1. Model tree nodes as value types (`struct`) rather than objects (`class`)
-    * Objects suffer memory overhead in the form of type and method information
-    * Since `struct`s cannot reference themselves an index (`int`) is used to reference other nodes
+
+    Objects suffer memory overhead in the form of type and method information. Since `struct`s cannot reference themselves an index (`int`) is used to reference other nodes.
+
 1. Store nodes and intervals in indexable arrays, use indexes rather than references as pointers
-    * Pointers in 64-bit systems take up 8 bytes of storage, `int`s only take 4 bytes
-    * Storing value types in Lists/Arrays improves CPU caching since elements are co-located in memory
+
+    Pointers in 64-bit systems take up 8 bytes of storage, `int`s only take 4 bytes. Storing value types in Lists/Arrays improves CPU caching since elements are co-located in memory.
+
 1. Nodes reference their intervals by index and length
-    * Rather than allocating an array object for each node to store intervals in, all intervals are stored in a single array. All related intervals are grouped, and each node keeps an index and count to point to the related intervals.
-    * For sparse trees this means that the majority of nodes will be storing two ints as opposed to allocating a 1-length array and storing an 8 byte pointer to said array.
+
+    `RangeTree` allocates an array for each node to store intervals in. This project keeps all intervals in a single array. All related intervals are grouped, and each node keeps an index and count to point to the related intervals. This approach eliminates the overhead of small array allocations.
+
+1. Iterative searching
+
+    `RangeTree`, as well as early versions of this project, uses recursion to search smaller and smaller subtrees, eventually propagating results back up to the initial caller. Each method call, however, incurs some overhead from pushing the same arguments to the stack repeatedly. Newer version of this project use an iterative depth-first-search algorithm, backed by a small stack-allocated buffer for tracking progress. This speeds up querying without adding any heap allocations.
