@@ -23,6 +23,17 @@ public class UnitTests
 
         [Test]
         [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRange_Returns0Results(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+
+            var results = tree.Query(0, 10);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenAddedTo_DoesNotExplode(string treeType)
         {
             var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
@@ -103,6 +114,69 @@ public class UnitTests
             tree.Add(10, 19, 1);
 
             var results = tree.Query(20);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeBeforeFromValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(5, 8);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeAcrossFromValue_ReturnsMatch(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(8, 12);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+            Assert.That(results.First(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeInsideInterval_ReturnsMatch(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(12, 15);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+            Assert.That(results.First(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeAcrossTo_ReturnsMatch(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(18, 23);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+            Assert.That(results.First(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeAfterToValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(22, 25);
 
             Assert.That(results.Count(), Is.EqualTo(0));
         }
