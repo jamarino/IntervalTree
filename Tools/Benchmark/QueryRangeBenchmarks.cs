@@ -10,11 +10,6 @@ public class QueryRangeBenchmarks
     private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _treeCache = new();
     private Dictionary<string, IEnumerable<Interval<long, int>>> _dataCache = new();
 
-    public string[] TreeTypes => TreeFactory.TreeTypes;
-
-    [ParamsSource(nameof(TreeTypes))]
-    public string TreeType { get; set; } = string.Empty;
-
     [Params("sparse", "medium", "dense")]
     public string DataType { get; set; } = string.Empty;
 
@@ -88,10 +83,34 @@ public class QueryRangeBenchmarks
         _dataCache["dense"] = dense;
     }
 
-    [Benchmark(OperationsPerInvoke = 10_000)]
-    public void Query()
+    [Benchmark(OperationsPerInvoke = 10_000, Baseline = true)]
+    public void QueryReference()
     {
-        var tree = GetLoadedTree(TreeType, DataType);
+        var tree = GetLoadedTree("reference", DataType);
+        var range = 0;
+        for (var i = 0; i < 10_000; i++)
+        {
+            range = range % 100 + 1;
+            tree.Query(i, i + range);
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = 10_000)]
+    public void QueryLight()
+    {
+        var tree = GetLoadedTree("light", DataType);
+        var range = 0;
+        for (var i = 0; i < 10_000; i++)
+        {
+            range = range % 100 + 1;
+            tree.Query(i, i + range);
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = 10_000)]
+    public void QueryQuick()
+    {
+        var tree = GetLoadedTree("quick", DataType);
         var range = 0;
         for (var i = 0; i < 10_000; i++)
         {

@@ -9,7 +9,7 @@ public class LoadBenchmarks
 {
     private List<(long, long, int)> _ranges = new();
 
-    public string[] TreeTypes => TreeFactory.TreeTypes;
+    public IEnumerable<string> TreeTypes => TreeFactory.TreeTypes;
 
     [ParamsSource(nameof(TreeTypes))]
     public string TreeType { get; set; } = string.Empty;
