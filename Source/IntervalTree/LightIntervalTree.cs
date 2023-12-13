@@ -84,7 +84,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
             else
             {
-                var center = (min + max + 1) / 2;
+                var center = min + (max - min + 1) / 2;
                 var interval = _intervals[center];
 
                 var compareMax = target.CompareTo(interval.Max);
@@ -221,7 +221,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
         TKey UpdateMaxRec(int min, int max)
         {
-            var center = (min + max + 1) / 2;
+            var center = min + (max - min + 1) / 2;
 
             var interval = _intervals[center];
 
