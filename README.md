@@ -187,10 +187,8 @@ When using trees in a concurrent environment, please be sure to initialise the t
 
 ## TODO list
 
+* Implement clear methods
 * Implement remove methods
-* Use a value-type enumerable return type to avoid allocations for empty/small results
-* Consider adding a new auto-balancing tree
-* Add dotnet7 INumber<T> TKey constraint for improved performance (approx 2x query performance)
 
 ## Optimizations over RangeTree
 
