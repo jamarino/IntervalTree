@@ -7,7 +7,7 @@ namespace Benchmark;
 [MemoryDiagnoser]
 public class QueryRangeBenchmarks
 {
-    private Dictionary<string, IntervalTree.IIntervalTree<long, int>> _treeCache = new();
+    private Dictionary<string, object> _treeCache = new();
     private Dictionary<string, IEnumerable<Interval<long, int>>> _dataCache = new();
 
     [Params("sparse", "medium", "dense")]
@@ -16,7 +16,7 @@ public class QueryRangeBenchmarks
     [Params(250_000)]
     public int IntervalCount = 1;
 
-    public IntervalTree.IIntervalTree<long, int> GetLoadedTree(string treeType, string dataType)
+    public object GetLoadedTree(string treeType, string dataType)
     {
         var key = $"{treeType}:{dataType}";
         if (_treeCache.ContainsKey(key))
@@ -24,18 +24,36 @@ public class QueryRangeBenchmarks
             return _treeCache[key];
         }
 
-        var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
-
-        var data = _dataCache[dataType];
-
-        foreach (var interval in data)
+        if (treeType is "reference")
         {
-            tree.Add(interval.From, interval.To, interval.Value);
-        }
-        tree.Query(0);
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
-        _treeCache[key] = tree;
-        return tree;
+            var data = _dataCache[dataType];
+
+            foreach (var interval in data)
+            {
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+            tree.Query(0);
+
+            _treeCache[key] = tree;
+            return tree;
+        }
+        else
+        {
+            var tree = (IIntervalTree<long, int>)TreeFactory.CreateEmptyTreeRaw<long, int>(treeType);
+
+            var data = _dataCache[dataType];
+
+            foreach (var interval in data)
+            {
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+            tree.Query(0);
+
+            _treeCache[key] = tree;
+            return tree;
+        }
     }
 
     [GlobalSetup]
@@ -86,36 +104,51 @@ public class QueryRangeBenchmarks
     [Benchmark(OperationsPerInvoke = 10_000, Baseline = true)]
     public void QueryReference()
     {
-        var tree = GetLoadedTree("reference", DataType);
+        var tree = (IntervalTree.IntervalTree<long, int>)GetLoadedTree("reference", DataType);
         var range = 0;
         for (var i = 0; i < 10_000; i++)
         {
             range = range % 100 + 1;
-            tree.Query(i, i + range);
+            var results = tree.Query(i, i + range);
+            var sum = 0;
+            foreach (var result in results)
+            {
+                sum += result;
+            }
         }
     }
 
     [Benchmark(OperationsPerInvoke = 10_000)]
     public void QueryLight()
     {
-        var tree = GetLoadedTree("light", DataType);
+        var tree = (LightIntervalTree<long, int>)GetLoadedTree("light", DataType);
         var range = 0;
         for (var i = 0; i < 10_000; i++)
         {
             range = range % 100 + 1;
-            tree.Query(i, i + range);
+            var results = tree.Query(i, i + range);
+            var sum = 0;
+            foreach (var result in results)
+            {
+                sum += result;
+            }
         }
     }
 
     [Benchmark(OperationsPerInvoke = 10_000)]
     public void QueryQuick()
     {
-        var tree = GetLoadedTree("quick", DataType);
+        var tree = (QuickIntervalTree<long, int>)GetLoadedTree("quick", DataType);
         var range = 0;
         for (var i = 0; i < 10_000; i++)
         {
             range = range % 100 + 1;
-            tree.Query(i, i + range);
+            var results = tree.Query(i, i + range);
+            var sum = 0;
+            foreach (var result in results)
+            {
+                sum += result;
+            }
         }
     }
 }
