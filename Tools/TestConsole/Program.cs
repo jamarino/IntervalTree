@@ -124,4 +124,70 @@ app.AddCommand("maxsize", (
     }
 });
 
+app.AddCommand("concurrentbuild", (
+    [Argument]
+    string treeType
+    ) =>
+{
+    const int numTrees = 10;
+    const int numIntervals = 100_000;
+    const int intervalMax = 1000;
+    const int numThreads = 10;
+
+    var trees = Enumerable
+        .Range(0, numTrees)
+        .Select((i) => TreeFactory.CreateEmptyTree<long, int>(treeType))
+        .ToArray();
+
+    var rand = new Random(123);
+
+    for (var i = 0; i < numIntervals; i++)
+    {
+        var from = rand.Next(intervalMax);
+        var to = from + rand.Next(1, 100);
+
+        foreach (var t in trees)
+        {
+            t.Add(from, to, i);
+        }
+    }
+
+    // init tree #0 as control
+    trees[0].Query(1);
+
+    var result = Parallel.For(0, numThreads, (tId) =>
+    {
+        for (var i = 0; i < intervalMax; i++)
+        {
+            var control = trees[0].Query(i).ToArray();
+
+            for (int j = 1; j < numTrees; j++)
+            {
+                try
+                {
+                    var test = trees[j].Query(i).ToArray();
+
+                    if (test.Length != control.Length)
+                    {
+                        Console.WriteLine($"Thread {tId}: Query {i} tree {j}. Result has different length: Control {control.Length}, Test: {test.Length}");
+                        continue;
+                    }
+
+                    for (int k = 0; k < control.Length; k++)
+                    {
+                        if (test[k] != control[k])
+                        {
+                            Console.WriteLine($"Thread {tId}: Query {i} tree {j}. Result has different content: Control {control[k]}, Test: {test[k]}");
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Thread {tId}: Query {i} tree {j}. Exception thrown:\n{e.StackTrace}");
+                }
+            }
+        }
+    });
+});
+
 await app.RunAsync();
