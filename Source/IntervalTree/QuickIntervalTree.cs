@@ -11,6 +11,7 @@ namespace Jamarino.IntervalTree;
 public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
+    private readonly object _buildLock = new();
     private Interval<TKey, TValue>[] _intervals;
     private int _intervalCount = 0;
     private IntervalHalf[] _intervalsDescending = Array.Empty<IntervalHalf>();
@@ -252,27 +253,35 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     /// </summary>
     public void Build()
     {
-        // reset tree
-        _nodes.Clear();
-
-        // Add 'null' node and root
-        _nodes.Add(new Node()); // 0-index: 'null'
-        _nodes.Add(new Node()); // 1-index: root
-
-        // ensure descending intervals array is large enough, but not too large
-        if (_intervalsDescending.Length <  _intervals.Length ||
-            _intervalsDescending.Length > 2 * _intervals.Length)
-            _intervalsDescending = new IntervalHalf[_intervals.Length];
-        
-        Array.Sort(_intervals, 0, _intervalCount);
-
-        BuildRec(0, _intervalCount - 1, 1);
-
-        _treeHeight = (int)Math.Log(_nodes.Count, 2) + 1;
-        _isBuilt = true;
-
-        void BuildRec(int min, int max, int nodeIndex)
+        lock (_buildLock)
         {
+            if (_isBuilt) return;
+
+            // reset tree
+            _nodes.Clear();
+
+            // Add 'null' node and root
+            _nodes.Add(new Node()); // 0-index: 'null'
+            _nodes.Add(new Node()); // 1-index: root
+
+            // ensure descending intervals array is large enough, but not too large
+            if (_intervalsDescending.Length < _intervals.Length ||
+                _intervalsDescending.Length > 2 * _intervals.Length)
+                _intervalsDescending = new IntervalHalf[_intervals.Length];
+
+            Array.Sort(_intervals, 0, _intervalCount);
+
+            BuildRec(0, _intervalCount - 1, 1, 0);
+
+            _treeHeight = (int)Math.Log(_nodes.Count, 2) + 1;
+            _isBuilt = true; 
+        }
+
+        void BuildRec(int min, int max, int nodeIndex, int recursionLevel)
+        {
+            if (recursionLevel++ > 100)
+                throw new Exception($"Excessive recursion detected, aborting to prevent stack overflow. Please check thread safety.");
+
             var sliceWidth = max - min + 1;
 
             if (sliceWidth <= 0) return;
@@ -369,10 +378,10 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             var leftSize = i - nodeIntervalCount;
 
             // left
-            BuildRec(min, i - nodeIntervalCount - 1, nextIndex);
+            BuildRec(min, i - nodeIntervalCount - 1, nextIndex, recursionLevel);
 
             // right
-            BuildRec(i, max, nextIndex + 1);
+            BuildRec(i, max, nextIndex + 1, recursionLevel);
         }
     }
 

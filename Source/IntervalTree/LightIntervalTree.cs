@@ -10,6 +10,7 @@ namespace Jamarino.IntervalTree;
 public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
+    private readonly object _buildLock = new();
     private readonly List<AugmentedInterval> _intervals;
     private bool _isBuilt = false;
     private int _treeHeight = 0;
@@ -204,23 +205,31 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     /// </summary>
     public void Build()
     {
-        if (_intervals.Count is 0)
+        lock (_buildLock)
         {
-            _treeHeight = 0;
+            if (_isBuilt) return;
+
+            if (_intervals.Count is 0)
+            {
+                _treeHeight = 0;
+                _isBuilt = true;
+                return;
+            }
+
+            // order intervals
+            _intervals.Sort();
+            _treeHeight = (int)Math.Log(_intervals.Count, 2) + 1;
+
+            UpdateMaxRec(0, _intervals.Count - 1, 0);
+
             _isBuilt = true;
-            return;
         }
 
-        // order intervals
-        _intervals.Sort();
-        _treeHeight = (int)Math.Log(_intervals.Count, 2) + 1;
-
-        UpdateMaxRec(0, _intervals.Count - 1);
-
-        _isBuilt = true;
-
-        TKey UpdateMaxRec(int min, int max)
+        TKey UpdateMaxRec(int min, int max, int recursionLevel)
         {
+            if (recursionLevel++ > 100)
+                throw new Exception($"Excessive recursion detected, aborting to prevent stack overflow. Please check thread safety.");
+
             var center = min + (max - min + 1) / 2;
 
             var interval = _intervals[center];
@@ -239,9 +248,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 // find max between children and own 'To'
                 var maxValue = interval.To;
 
-                var left = UpdateMaxRec(min, center - 1);
+                var left = UpdateMaxRec(min, center - 1, recursionLevel);
                 var right = center < max ?
-                    UpdateMaxRec(center + 1, max) :
+                    UpdateMaxRec(center + 1, max, recursionLevel) :
                     maxValue;
 
                 if (left.CompareTo(maxValue) > 0)
