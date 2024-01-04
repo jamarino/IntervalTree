@@ -268,6 +268,14 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Clear all data from tree. Allows reusing an already allocated tree, instead of allocating a new one.
+    /// </summary>
+    public void Clear()
+    {
+        _intervals.Clear();
+    }
+
     private record struct AugmentedInterval : IComparable<AugmentedInterval>
     {
         public AugmentedInterval(TKey from, TKey to, TKey max, TValue value)

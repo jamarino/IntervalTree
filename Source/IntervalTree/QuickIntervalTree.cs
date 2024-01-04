@@ -385,6 +385,15 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Clear all data from tree. Allows reusing an already allocated tree, instead of allocating a new one.
+    /// </summary>
+    public void Clear()
+    {
+        _intervalCount = 0;
+        _isBuilt = false;
+    }
+
     private readonly record struct Node
     {
         public Node(TKey center, int next, int intervalIndex, int intervalCount)

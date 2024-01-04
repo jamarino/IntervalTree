@@ -51,6 +51,17 @@ public class UnitTests
 
             Assert.That(tree.Count, Is.EqualTo(1));
         }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenCleared_RemainsEmpty(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+
+            tree.Clear();
+
+            Assert.That(tree.Count, Is.EqualTo(0));
+        }
     }
 
     public class ATreeWithOneInterval : UnitTests
@@ -177,6 +188,31 @@ public class UnitTests
             tree.Add(10, 19, 1);
 
             var results = tree.Query(22, 25);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenCleared_Returns0Count(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 20, 1);
+
+            tree.Clear();
+
+            Assert.That(tree.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenCleared_Returns0Results(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 20, 1);
+
+            tree.Clear();
+            var results = tree.Query(15);
 
             Assert.That(results.Count(), Is.EqualTo(0));
         }

@@ -22,10 +22,7 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public void Add(TKey from, TKey to, TValue value) => LightTree.Add(from, to, value);
 
-    public void Clear()
-    {
-        throw new NotImplementedException();
-    }
+    public void Clear() => LightTree.Clear();
 
     public IEnumerator<RangeValuePair<TKey, TValue>> GetEnumerator() =>
         LightTree

@@ -100,4 +100,46 @@ public class CompatibilityTests
             }
         }
     }
+
+    [Test]
+    public void CompareInteractions(
+        [ValueSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        string treeType,
+        [Range(1, 100)]
+        int seed)
+    {
+        var random = new Random(seed);
+
+        var originalTree = TreeFactory.CreateEmptyTree<long, int>("reference");
+        var treeUnderTest = TreeFactory.CreateEmptyTree<long, int>(treeType);
+
+        for (int i = 0; i < 200; i++)
+        {
+            var action = random.Next(100);
+
+            if (action <= 95)
+            {
+                var from = random.Next(100);
+                var to = from + random.Next(1, 20);
+
+                originalTree.Add(from, to, i);
+                treeUnderTest.Add(from, to, i);
+            }
+            else
+            {
+                originalTree.Clear();
+                treeUnderTest.Clear();
+            }
+
+            Assert.That(treeUnderTest.Count, Is.EqualTo(originalTree.Count));
+
+            for (int j = 0; j < 120; j++)
+            {
+                var orig = originalTree.Query(j);
+                var uut = treeUnderTest.Query(j);
+
+                CollectionAssert.AreEquivalent(uut, orig);
+            }
+        }
+    }
 }

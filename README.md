@@ -187,7 +187,6 @@ When using trees in a concurrent environment, please be sure to initialise the t
 
 ## TODO list
 
-* Implement clear methods
 * Implement remove methods
 
 ## Optimizations over RangeTree

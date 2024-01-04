@@ -5,6 +5,7 @@
 * Fixed potential integer overflow issue when querying trees with more than 1 billion intervals
 * Added recursion limits to prevent stack overflows when trees are misused without proper thread safety in concurrent scenarios
 * Added build locks to protect consumers who forget to RTFM thread safety section
+* Added `Clear()` method to allow reuse of allocated trees
 
 ## v0.8.0 - 2023/08/06
 
