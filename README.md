@@ -1,6 +1,8 @@
 # Jamarino.IntervalTree
 
-A light-weight, performant interval tree written in C#. Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations. `RangeTree` is still a great option if you need a fully featured interval tree.
+Light-weight, performant interval trees written in C#.
+
+Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations.
 
 ## Example
 
@@ -30,7 +32,7 @@ tree.Query(1, 50) // result is {1, 2, 3}
 
 The following graphs are based on benchmarks of dense trees with 250,000 intervals.
 
-Runs marked with 'hint' were provided a capacity hint to initialize the trees to an appropriate size.
+Runs marked with 'hint' were provided a capacity hint to initialise the trees to an appropriate size.
 
 See performance section further down for more details.
 
@@ -92,7 +94,11 @@ gantt
 
 ## Trees
 
-This package currently offers two different interval tree implementations - `LightIntervalTree` and `QuickIntervalTree` - the former being the most memory-efficient and the latter using a bit more memory in exchange for some significant performance gains. Read on for more details and benchmarks.
+This package currently offers two different interval tree implementations: `LightIntervalTree` and `QuickIntervalTree`.
+
+The former is the most memory-efficient and the latter uses a bit more memory, in exchange for some significant performance gains.
+
+Read on for more details and benchmarks.
 
 ### LightIntervalTree
 
@@ -112,9 +118,9 @@ This tree is balanced on the first query. Adding new intervals causes the tree t
 
 ## Limitations
 
-1. The feature set is currently quite limited, only adding intervals and querying for specific values is supported.
+Please see the section on [Thread Safety](#thread-safety).
 
-1. `LightIntervalTree` and `QuickIntervalTree` are limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
+`LightIntervalTree` and `QuickIntervalTree` are limited to approximately 2 billion intervals. This is because `int`s are used as "pointers" as an optimization. Storing 2 billion intervals would take approximately 50GB~100GB of memory, so this limitation is mostly theoretical.
 
 ## Performance
 
@@ -144,7 +150,7 @@ The following table contains the change in memory usage measured between loading
 | Avg change |     87 MB | 42 MB |        31 MB | 53 MB |        44 MB |
 | Max change |    281 MB | 68 MB |        34 MB | 67 MB |        52 MB |
 
-Runs marked with 'hint' were provided a capacity hint to initialize the trees to an appropriate size. This feature is only relevant when the number of intervals is known before creating the tree. The reference solution does not support capacity hints.
+Runs marked with 'hint' were provided a capacity hint to initialise the trees to an appropriate size. This feature is only relevant when the number of intervals is known before creating the tree. The reference solution does not support capacity hints.
 
 It is clear that both `LightIntervalTree` and `QuickIntervalTree` offer better memory efficiency on average, compared to `RangeTree`. Additionally, memory growth is much more stable. Only a few objects are allocated per tree, and these are mostly long-lived and don't require (immediate) garbage collection. As a result, loading a tree does not cause a large spike in memory use and GC collections.
 
@@ -180,10 +186,16 @@ Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicke
 
 ## Thread Safety
 
-Tree-initialization, triggered by the first query after an `.Add()` invocation, is _not_ thread safe. Subsequent concurrent queries are safe. Adding new intervals requires exclusive access, followed by a single query to re-initialise the tree before releasing exclusive access. It is up to the consumer to enforce synchronization controls. Consider using something like [ReaderWriterLockSlim (Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim).
+Tree-initialization, triggered by the **first query invocation, is _not_ thread safe**.
 
-> **Warning**<br>
-When using trees in a concurrent environment, please be sure to initialise the trees while still holding exclusive access. Do this simply by performing a `.Query()` invocation, before yielding exclusive access. Do this after initial load and after any later modifications via calls to `.Add()`.
+Subsequent concurrent queries _are_ thread safe.
+
+Any modifications, adding/clearing/removing intervals, require exclusive access, followed by a single query to re-initialise the tree before releasing exclusive access.
+
+It is up to the consumer to enforce synchronization controls.
+Consider using something like [ReaderWriterLockSlim (Microsoft)](https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim).
+
+To reduce the risk of significant problems stemming from misuse, a lock statement has been added to block concurrent initializations. This should prevent issues in cases where a tree is not initialised before being queried concurrently, however, this safety is is not guaranteed. Please take care to follow the advice above.
 
 ## TODO list
 

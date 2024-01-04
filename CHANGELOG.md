@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.0 - Unreleased
+## v0.9.0 - 2024/01/04
 
 * Fixed potential integer overflow issue when querying trees with more than 1 billion intervals
 * Added recursion limits to prevent stack overflows when trees are misused without proper thread safety in concurrent scenarios
