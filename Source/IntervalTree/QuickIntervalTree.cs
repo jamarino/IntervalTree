@@ -111,8 +111,9 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var half = _intervalsDescending[i];
                     if (target.CompareTo(half.Start) <= 0)
                     {
+                        var full = _intervals[half.Index];
                         result ??= new List<TValue>();
-                        result.Add(half.Value);
+                        result.Add(full.Value);
                     }
                     else
                     {
@@ -207,8 +208,9 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var half = _intervalsDescending[i];
                     if (low.CompareTo(half.Start) <= 0)
                     {
+                        var full = _intervals[half.Index];
                         result ??= new List<TValue>();
-                        result.Add(half.Value);
+                        result.Add(full.Value);
                     }
                     else
                     {
@@ -343,7 +345,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             for (var j = nodeIntervalIndex; j < nodeIntervalIndex + nodeIntervalCount; j++)
             {
                 var interval = _intervals[j];
-                _intervalsDescending[j] = new IntervalHalf(interval.To, interval.Value);
+                _intervalsDescending[j] = new IntervalHalf(interval.To, j);
             }
 
             // sort descending interval halves
@@ -412,18 +414,21 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     private readonly record struct IntervalHalf : IComparable<IntervalHalf>
     {
-        public IntervalHalf(TKey start, TValue value)
+        public IntervalHalf(TKey start, int intervalIndex)
         {
             Start = start;
-            Value = value;
+            Index = intervalIndex;
         }
 
         public readonly TKey Start;
-        public readonly TValue Value;
+        public readonly int Index;
 
         public int CompareTo(IntervalHalf other)
         {
-            return Start.CompareTo(other.Start);
+            var cmp = Start.CompareTo(other.Start);
+            if (cmp == 0)
+                return Index.CompareTo(other.Index);
+            return cmp;
         }
     }
 }
