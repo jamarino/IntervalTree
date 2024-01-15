@@ -15,6 +15,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private bool _isBuilt = false;
     private int _treeHeight = 0;
 
+    /// <inheritdoc cref="LightIntervalTree{TKey, TValue}"/>
     public LightIntervalTree(int? initialCapacity = null)
     {
         _intervals = new List<AugmentedInterval>(initialCapacity ?? 16);
@@ -24,9 +25,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Values => _intervals.Select(i => i.Value);
 
-    /// <summary>
-    /// Add an interval to the tree. Note that the tree will be rebuilt on the next query.
-    /// </summary>
     public void Add(TKey from, TKey to, TValue value)
     {
         _intervals.Add(new AugmentedInterval(from, to, to, value));
@@ -38,12 +36,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    /// <summary>
-    /// Find the values associated with all intervals containing the provided target value.
-    /// Note that the tree will first be built if required.
-    /// </summary>
-    /// <param name="target">The value to test against stored intervals</param>
-    /// <returns>Values associated with matching intervals</returns>
     public IEnumerable<TValue> Query(TKey target)
     {
         if (_isBuilt is false)
@@ -116,12 +108,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
-    /// <summary>
-    /// Find the values associated with all intervals overlapping the provided range.
-    /// Note that the tree will first be built if required.
-    /// </summary>
-    /// <param name="target">The value to test against stored intervals</param>
-    /// <returns>Values associated with matching intervals</returns>
     public IEnumerable<TValue> Query(TKey low, TKey high)
     {
         if (high.CompareTo(low) < 0)
@@ -199,9 +185,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     /// <summary>
     /// Build the underlying tree structure.
-    /// This operation is NOT thread safe.
     /// A build is automatically performed, if needed, on the first query after altering the tree.
-    /// This operation takes O(n log n) time. 
     /// </summary>
     public void Build()
     {
@@ -292,9 +276,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             Remove(val);
     }
 
-    /// <summary>
-    /// Clear all data from tree. Allows reusing an already allocated tree, instead of allocating a new one.
-    /// </summary>
     public void Clear()
     {
         _intervals.Clear();

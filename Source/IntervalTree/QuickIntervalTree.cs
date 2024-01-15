@@ -19,6 +19,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private List<Node> _nodes = new();
     private bool _isBuilt = false;
 
+    /// <inheritdoc cref="QuickIntervalTree{TKey, TValue}"/>
     public QuickIntervalTree(int? initialCapacity = null)
     {
         _intervals = new Interval<TKey, TValue>[initialCapacity ?? 32];
@@ -34,9 +35,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    /// <summary>
-    /// Add an interval to the tree. Note that the tree will be rebuilt on the next query.
-    /// </summary>
     public void Add(TKey from, TKey to, TValue value)
     {
         if (_intervalCount == _intervals.Length)
@@ -51,12 +49,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         _isBuilt = false;
     }
 
-    /// <summary>
-    /// Find the values associated with all intervals containing the provided target value.
-    /// Note that the tree will first be built if required.
-    /// </summary>
-    /// <param name="target">The value to test against stored intervals</param>
-    /// <returns>Values associated with matching intervals</returns>
     public IEnumerable<TValue> Query(TKey target)
     {
         if (_isBuilt is false)
@@ -143,12 +135,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return result ?? Enumerable.Empty<TValue>();
     }
 
-    /// <summary>
-    /// Find the values associated with all intervals overlapping the provided range.
-    /// Note that the tree will first be built if required.
-    /// </summary>
-    /// <param name="target">The value to test against stored intervals</param>
-    /// <returns>Values associated with matching intervals</returns>
     public IEnumerable<TValue> Query(TKey low, TKey high)
     {
         if (high.CompareTo(low) < 0)
@@ -249,9 +235,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     /// <summary>
     /// Build the underlying tree structure.
-    /// This operation is NOT thread safe.
     /// A build is automatically performed, if needed, on the first query after altering the tree.
-    /// This operation takes O(n log n) time. 
     /// </summary>
     public void Build()
     {
@@ -412,9 +396,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             Remove(val);
     }
 
-    /// <summary>
-    /// Clear all data from tree. Allows reusing an already allocated tree, instead of allocating a new one.
-    /// </summary>
     public void Clear()
     {
         _intervalCount = 0;
