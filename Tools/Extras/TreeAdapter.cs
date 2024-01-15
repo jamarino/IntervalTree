@@ -35,15 +35,9 @@ public class TreeAdapter<TKey, TValue> : IIntervalTree<TKey, TValue>
     public IEnumerable<TValue> Query(TKey from, TKey to)
         => LightTree.Query(from, to);
 
-    public void Remove(TValue item)
-    {
-        throw new NotImplementedException();
-    }
+    public void Remove(TValue item) => LightTree.Remove(item);
 
-    public void Remove(IEnumerable<TValue> items)
-    {
-        throw new NotImplementedException();
-    }
+    public void Remove(IEnumerable<TValue> items) => LightTree .Remove(items);
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

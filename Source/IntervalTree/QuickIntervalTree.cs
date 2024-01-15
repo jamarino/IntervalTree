@@ -387,6 +387,31 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         }
     }
 
+    public void Remove(TValue value)
+    {
+        var i = 0;
+        while (i < _intervalCount)
+        {
+            var interval = _intervals[i];
+            if (Equals(interval.Value, value))
+            {
+                _intervalCount--;
+                _intervals[i] = _intervals[_intervalCount];
+                _isBuilt = false;
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
+
+    public void Remove(IEnumerable<TValue> values)
+    {
+        foreach (var val in values)
+            Remove(val);
+    }
+
     /// <summary>
     /// Clear all data from tree. Allows reusing an already allocated tree, instead of allocating a new one.
     /// </summary>

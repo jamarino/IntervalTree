@@ -13,5 +13,9 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
 
     IEnumerable<TValue> Query(TKey low, TKey high);
 
+    void Remove(TValue value);
+
+    void Remove(IEnumerable<TValue> values);
+
     void Clear();
 }

@@ -62,6 +62,17 @@ public class UnitTests
 
             Assert.That(tree.Count, Is.EqualTo(0));
         }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenRemoving_DoesNothing(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+
+            tree.Remove(123);
+
+            Assert.That(tree.Count, Is.EqualTo(0));
+        }
     }
 
     public class ATreeWithOneInterval : UnitTests
@@ -216,6 +227,54 @@ public class UnitTests
 
             Assert.That(results.Count(), Is.EqualTo(0));
         }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenRemovingValue_IsCount0(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 20, 1);
+
+            tree.Remove(1);
+
+            Assert.That(tree.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenRemovingValue_IsEmpty(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 20, 1);
+
+            tree.Remove(1);
+
+            Assert.That(tree.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenRemovingOtherValue_IsCount0(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 20, 1);
+
+            tree.Remove(1337);
+
+            Assert.That(tree.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenRemovingOtherValue_IsEmpty(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 20, 1);
+
+            tree.Remove(1337);
+
+            Assert.That(tree.Count(), Is.EqualTo(1));
+        }
     }
 
     public class ATreeWithTwoDisjointIntervals : UnitTests
@@ -296,6 +355,74 @@ public class UnitTests
             var results = tree.Query(75);
 
             Assert.That(results.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenValueRemoved_CountIs1(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+            tree.Add(50, 59, 2);
+
+            tree.Remove(1);
+
+            Assert.That(tree.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenFirstValueRemoved_SecondValueRemains(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+            tree.Add(50, 59, 2);
+
+            tree.Remove(1);
+
+            Assert.That(tree.Any(i => i.Value == 2), Is.True);
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenSecondValueRemoved_FirstValueRemains(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+            tree.Add(50, 59, 2);
+
+            tree.Remove(2);
+
+            Assert.That(tree.Any(i => i.Value == 1), Is.True);
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenNoValuesAreRemoved_BothValuesRemain(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+            tree.Add(50, 59, 2);
+
+            tree.Remove(3);
+
+            Assert.That(tree.Count, Is.EqualTo(2));
+            Assert.That(tree.Any(i => i.Value == 1), Is.True);
+            Assert.That(tree.Any(i => i.Value == 2), Is.True);
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenBothValuesAreRemoved_NoValuesRemain(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 2);
+            tree.Add(50, 59, 2);
+
+            tree.Remove(2);
+
+            Assert.That(tree.Count, Is.EqualTo(0));
+            Assert.That(tree.Any(i => i.Value == 2), Is.False);
         }
     }
 

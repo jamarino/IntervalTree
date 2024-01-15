@@ -113,33 +113,71 @@ public class CompatibilityTests
         var originalTree = TreeFactory.CreateEmptyTree<long, int>("reference");
         var treeUnderTest = TreeFactory.CreateEmptyTree<long, int>(treeType);
 
-        for (int i = 0; i < 200; i++)
+        for (int i = 0; i < 1000; i++)
         {
             var action = random.Next(100);
 
-            if (action <= 95)
+            if (action <= 2)
             {
+                // query all
+                Assert.That(treeUnderTest.Count, Is.EqualTo(originalTree.Count));
+
+                for (int j = 0; j < 120; j++)
+                {
+                    var orig = originalTree.Query(j);
+                    var uut = treeUnderTest.Query(j);
+
+                    CollectionAssert.AreEquivalent(uut, orig);
+                }
+            }
+            else if (action <= 10)
+            {
+                // query random
+                Assert.That(treeUnderTest.Count, Is.EqualTo(originalTree.Count));
+
+                for (int j = 0; j < 10; j++)
+                {
+                    var q = random.Next(100);
+                    var orig = originalTree.Query(q);
+                    var uut = treeUnderTest.Query(q);
+
+                    CollectionAssert.AreEquivalent(uut, orig);
+                }
+            }
+            else if (action <= 92)
+            {
+                // add
                 var from = random.Next(100);
                 var to = from + random.Next(1, 20);
 
-                originalTree.Add(from, to, i);
-                treeUnderTest.Add(from, to, i);
+                originalTree.Add(from, to, i % 100);
+                treeUnderTest.Add(from, to, i % 100);
+            }
+            else if (action <= 97)
+            {
+                // remove
+                var randomValue = random.Next(100);
+
+                originalTree.Remove(randomValue);
+                treeUnderTest.Remove(randomValue);
             }
             else
             {
+                // clear
                 originalTree.Clear();
                 treeUnderTest.Clear();
             }
+        }
 
-            Assert.That(treeUnderTest.Count, Is.EqualTo(originalTree.Count));
+        // query all
+        Assert.That(treeUnderTest.Count, Is.EqualTo(originalTree.Count));
 
-            for (int j = 0; j < 120; j++)
-            {
-                var orig = originalTree.Query(j);
-                var uut = treeUnderTest.Query(j);
+        for (int j = 0; j < 120; j++)
+        {
+            var orig = originalTree.Query(j);
+            var uut = treeUnderTest.Query(j);
 
-                CollectionAssert.AreEquivalent(uut, orig);
-            }
+            CollectionAssert.AreEquivalent(uut, orig);
         }
     }
 }
