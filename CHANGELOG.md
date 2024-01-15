@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.0 - Unreleased
+
+* Remove methods implemented
+
 ## v0.9.0 - 2024/01/04
 
 * Fixed potential integer overflow issue when querying trees with more than 1 billion intervals

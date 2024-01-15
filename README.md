@@ -197,10 +197,6 @@ Consider using something like [ReaderWriterLockSlim (Microsoft)](https://docs.mi
 
 To reduce the risk of significant problems stemming from misuse, a lock statement has been added to block concurrent initializations. This should prevent issues in cases where a tree is not initialised before being queried concurrently, however, this safety is is not guaranteed. Please take care to follow the advice above.
 
-## TODO list
-
-* Implement remove methods
-
 ## Optimizations over RangeTree
 
 A few key design decisions were made to reduce the memory usage.
