@@ -5,6 +5,7 @@
 * `Remove()` methods implemented
 * XmlDocs hoisted to IIntervalTree interface
 * Query performance of `LightIntervalTree` improved by ~2-5% by rearranging and removing unnecessary key comparisons
+* Test and benchmark projects updated to net8, published package remains netstandard2.0
 
 ## v0.9.0 - 2024/01/04
 
