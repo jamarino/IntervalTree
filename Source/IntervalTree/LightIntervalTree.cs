@@ -89,15 +89,17 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
                 // check current node
                 var compareFrom = target.CompareTo(interval.From);
-                var compareTo = target.CompareTo(interval.To);
-
-                if (compareFrom >= 0 && compareTo <= 0)
-                {
-                    results ??= new List<TValue>();
-                    results.Add(interval.Value);
-                }
 
                 if (compareFrom < 0) continue; // target smaller than From, bail
+                else
+                {
+                    var compareTo = target.CompareTo(interval.To);
+                    if (compareTo <= 0)
+                    {
+                        results ??= new List<TValue>();
+                        results.Add(interval.Value);
+                    }
+                }
 
                 // search right
                 stack[++stackIndex] = center + 1;
@@ -164,15 +166,17 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
                 // check current node
                 var compareFrom = high.CompareTo(interval.From);
-                var compareTo = low.CompareTo(interval.To);
-
-                if (compareFrom >= 0 && compareTo <= 0)
-                {
-                    results ??= new List<TValue>();
-                    results.Add(interval.Value);
-                }
 
                 if (compareFrom < 0) continue; // target smaller than From, bail
+                else
+                {
+                    var compareTo = low.CompareTo(interval.To);
+                    if (compareTo <= 0)
+                    {
+                        results ??= new List<TValue>();
+                        results.Add(interval.Value);
+                    }
+                }
 
                 // search right
                 stack[++stackIndex] = center + 1;

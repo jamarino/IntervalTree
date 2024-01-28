@@ -4,6 +4,7 @@
 
 * `Remove()` methods implemented
 * XmlDocs hoisted to IIntervalTree interface
+* Query performance of `LightIntervalTree` improved by ~2-5% by rearranging and removing unnecessary key comparisons
 
 ## v0.9.0 - 2024/01/04
 
@@ -21,7 +22,7 @@
 
 ## v0.7.0 - 2023/07/18
 
-Query performance of LightIntervalTree improved by a further 15% in dense benchmarks, by switching to a naive linear scan of intervals when subtree size falls to just a handful of intervals.
+Query performance of `LightIntervalTree` improved by a further 15% in dense benchmarks, by switching to a naive linear scan of intervals when subtree size falls to just a handful of intervals.
 
 ## v0.6.0 - 2023/07/18
 
@@ -37,7 +38,7 @@ Most obvious types, int, double, decimal, long, etc. still work with this constr
 
 ## v0.4.0 - 2023/07/10
 
-Renamed project from LightIntervalTree to Jamarino.IntervalTree
+Renamed project from `LightIntervalTree` to Jamarino.IntervalTree
 
 ## v0.3.0 - 2022/05/05
 
