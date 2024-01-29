@@ -2,7 +2,7 @@
 
 Light-weight, performant interval trees written in C#.
 
-Heavily inspired by [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree), but this project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations.
+Designed as a drop-in replacement for the popular [RangeTree (GitHub)](https://github.com/mbuchetics/RangeTree) package. This project provides a completely new implementation that is, from scratch, focused on reducing memory usage and allocations.
 
 ## Example
 
@@ -45,11 +45,11 @@ gantt
     axisFormat %s
 
     section Quick
-    13.30 mil : 0, 13304949
+    18.2 mil : 0, 18170000
     section Light
-    9.653 mil : 0, 9653441
+    14.7 mil : 0, 14710000
     section Reference
-    1.692 mil : 0, 1692734
+    5.39 mil : 0, 5392000
 ```
 
 ### Initialization time
@@ -61,15 +61,15 @@ gantt
     axisFormat %s
 
     section Quick
-    66 : 0, 66
+    39 : 0, 39
     section Quick (hint)
-    63 : 0, 63
+    36 : 0, 36
     section Light
-    42 : 0, 42
+    23 : 0, 23
     section Light (hint)
-    37 : 0, 37
+    19 : 0, 19
     section Reference
-    669  : 0, 669
+    340 : 0, 340
 ```
 
 ### Initialization memory allocation
@@ -158,11 +158,11 @@ It is clear that both `LightIntervalTree` and `QuickIntervalTree` offer better m
 
 | TreeType     |      Mean | Allocated |
 | ------------ | --------: | --------: |
-| light (hint) |  37.65 ms |      8 MB |
-| light        |  42.29 ms |     16 MB |
-| quick (hint) |  63.56 ms |     26 MB |
-| quick        |  66.44 ms |     33 MB |
-| reference    | 669.57 ms |    342 MB |
+| light (hint) |  19.06 ms |      8 MB |
+| light        |  23.45 ms |     16 MB |
+| quick (hint) |  36.16 ms |     26 MB |
+| quick        |  39.35 ms |     33 MB |
+| reference    | 338.85 ms |    342 MB |
 
 Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicker, but also allocates a lot fewer objects / less memory in the process. This means less work for the GC and reduces potential spikes in memory usage.
 
@@ -172,17 +172,16 @@ Loading data into `LightIntervalTree` and `QuickIntervalTree` is not only quicke
 
 | TreeType  | DataType |      Mean | Allocated |
 | --------- | -------- | --------: | --------: |
-| light     | dense    | 103.59 ns |     107 B |
-| light     | medium   |  80.23 ns |      50 B |
-| light     | sparse   |  66.03 ns |      14 B |
-| quick     | dense    |  75.16 ns |     107 B |
-| quick     | medium   |  62.57 ns |      50 B |
-| quick     | sparse   |  52.13 ns |      14 B |
-| reference | dense    | 590.76 ns |   1,256 B |
-| reference | medium   | 454.76 ns |     996 B |
-| reference | sparse   | 321.63 ns |     704 B |
+| light     | dense    | 132.43 ns |     153 B |
+| light     | sparse   |  67.99 ns |      22 B |
+| quick     | dense    |  99.55 ns |     153 B |
+| quick     | sparse   |  55.41 ns |      22 B |
+| reference | dense    | 336.94 ns |   1,312 B |
+| reference | sparse   | 185.47 ns |     711 B |
 
-`LightIntervalTree` is about 4-6 times quicker to query. `QuickIntervalTree` manages 6-8 times faster queries, and pulls ahead in dense datasets.
+`LightIntervalTree` is about 2-3 times quicker to query. `QuickIntervalTree` manages 3-4 times faster queries.
+
+> Upgrading benchmarks from net6 to net8 improved the reference performance by ~78%, significantly reducing the performance gap. This project still leads in performance, and perhaps more importantly in memory/GC efficiency. As always, if performance is critical for your use case, make sure to measure!
 
 ## Thread Safety
 
@@ -208,7 +207,7 @@ A few key design decisions were made to reduce the memory usage.
 
 1. Model tree nodes as value types (`struct`) rather than objects (`class`)
 
-    Objects suffer memory overhead in the form of type and method information. Since `struct`s cannot reference themselves an index (`int`) is used to reference other nodes.
+    Objects suffer memory overhead in the form of type and method information. Since `struct`s cannot reference their own type (to form a tree) an index (`int`) is used to reference other nodes by index.
 
 1. Store nodes and intervals in indexable arrays, use indexes rather than references as pointers
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0 - Unreleased
+## v1.0.0 - 2024/01/31
 
 * `Remove()` methods implemented
 * XmlDocs hoisted to IIntervalTree interface
