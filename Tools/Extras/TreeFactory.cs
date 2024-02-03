@@ -9,6 +9,7 @@ public static class TreeFactory
 {
     public static IEnumerable<string> TreeTypes = new string[] {
         "reference",
+        "linear",
         "light",
         "quick",
     };
@@ -32,6 +33,7 @@ public static class TreeFactory
             return type switch
             {
                 "reference" => new IntervalTree.IntervalTree<TKey, TValue>(),
+                "linear" => new LinearIntervalTree<TKey, TValue>(),
                 "light" => new LightIntervalTree<TKey, TValue>(),
                 "quick" => new QuickIntervalTree<TKey, TValue>(),
                 _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
@@ -41,6 +43,7 @@ public static class TreeFactory
         return type switch
         {
             "reference" => new IntervalTree.IntervalTree<TKey, TValue>(),
+            "linear" => new LinearIntervalTree<TKey, TValue>(capacity),
             "light" => new LightIntervalTree<TKey, TValue>(capacity),
             "quick" => new QuickIntervalTree<TKey, TValue>(capacity),
             _ => throw new ArgumentException($"Unkown tree type: {type}", nameof(type))
