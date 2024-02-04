@@ -1,50 +1,147 @@
 using BenchmarkDotNet.Attributes;
 using Extras;
+using Jamarino.IntervalTree;
 
 namespace Benchmark;
 
 [MemoryDiagnoser]
+[MinIterationCount(5)]
+[MaxIterationCount(10)]
+[MinWarmupCount(3)]
+[MaxWarmupCount(5)]
+[IterationTime(200)]
 [Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
 public class LoadBenchmarks
 {
-    private List<(long, long, int)> _ranges = new();
+    private const int _runs = 8;
+    private Interval<long, int>[] _data = [];
 
-    public IEnumerable<string> TreeTypes => TreeFactory.TreeTypes;
-
-    [ParamsSource(nameof(TreeTypes))]
-    public string TreeType { get; set; } = string.Empty;
-
-    [Params(250_000)]
+    [Params(100, 1_000, 10_000, 100_000)]
     public int IntervalCount = 1;
-
-    [Params(true, false)]
-    public bool CapacityHint = false;
 
     [GlobalSetup]
     public void GlobalSetup()
     {
         var random = new Random(123);
-
-        var max = 10 * IntervalCount;
-        var maxIntervalSize = 2 * max / IntervalCount;
-
-        _ranges = Enumerable.Range(0, IntervalCount)
-            .Select(i => random.NextInt64(0, max))
-            .Select(i => (i, i + random.Next(1, maxIntervalSize), random.Next(10_000)))
-            .ToList();
+        _data = IntervalGenerator.GenerateLongInt(IntervalCount, random);
     }
 
-    [Benchmark]
-    public void Load()
+    [Benchmark(OperationsPerInvoke = _runs, Baseline = true)]
+    public void Reference()
     {
-        var tree = CapacityHint ?
-            TreeFactory.CreateEmptyTree<long, int>(TreeType, IntervalCount) :
-            TreeFactory.CreateEmptyTree<long, int>(TreeType);
-
-        foreach (var (from, to, val) in _ranges)
+        for (int run = 0; run < _runs; run++)
         {
-            tree.Add(from, to, val);
+            var tree = new IntervalTree.IntervalTree<long, int>();
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            tree.Query(0); // force build
         }
-        tree.Query(0);
+    }
+
+    [Benchmark(OperationsPerInvoke = _runs)]
+    public void LinearHint()
+    {
+        for (int run = 0; run < _runs; run++)
+        {
+            var tree = new LinearIntervalTree<long, int>(IntervalCount);
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            // no build required
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = _runs)]
+    public void Linear()
+    {
+        for (int run = 0; run < _runs; run++)
+        {
+            var tree = new LinearIntervalTree<long, int>();
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            // no build required
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = _runs)]
+    public void LightHint()
+    {
+        for (int run = 0; run < _runs; run++)
+        {
+            var tree = new LightIntervalTree<long, int>(IntervalCount);
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            tree.Build();
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = _runs)]
+    public void Light()
+    {
+        for (int run = 0; run < _runs; run++)
+        {
+            var tree = new LightIntervalTree<long, int>();
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            tree.Build();
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = _runs)]
+    public void QuickHint()
+    {
+        for (int run = 0; run < _runs; run++)
+        {
+            var tree = new QuickIntervalTree<long, int>(IntervalCount);
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            tree.Build();
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = _runs)]
+    public void Quick()
+    {
+        for (int run = 0; run < _runs; run++)
+        {
+            var tree = new QuickIntervalTree<long, int>();
+
+            for (var i = 0; i < IntervalCount; i++)
+            {
+                var interval = _data[i];
+                tree.Add(interval.From, interval.To, interval.Value);
+            }
+
+            tree.Build();
+        }
     }
 }

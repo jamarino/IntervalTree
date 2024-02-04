@@ -5,129 +5,91 @@ using Jamarino.IntervalTree;
 namespace Benchmark;
 
 [MemoryDiagnoser]
+[MinIterationCount(5)]
+[MaxIterationCount(20)]
+[MaxWarmupCount(10)]
 public class QueryBenchmarks
 {
-    private Dictionary<string, object> _treeCache = new();
-    private Dictionary<string, IEnumerable<Interval<long, int>>> _dataCache = new();
+    private Interval<long, int>[] _data = [];
+    private int _max = 0;
+    private object? _cachedTree;
 
-    [Params("sparse", "dense")]
-    public string DataType { get; set; } = string.Empty;
-
-    [Params(250_000)]
+    [Params(100, 1_000, 10_000, 100_000)]
     public int IntervalCount = 1;
 
-    public object GetLoadedTree(string treeType, string dataType)
+    private T GetLoadedTree<T>()
+        where T : class, new()
     {
-        var key = $"{treeType}:{dataType}";
-        if (_treeCache.ContainsKey(key))
+        if (_cachedTree is not null)
+            return (_cachedTree as T)!;
+
+        var tree = new T();
+        if (tree is IntervalTree.IntervalTree<long, int> rangeTree)
         {
-            return _treeCache[key];
+            foreach (var item in _data)
+                rangeTree.Add(item.From, item.To, item.Value);
+        }
+        else if (tree is IIntervalTree<long, int> intervalTree)
+        {
+            foreach (var item in _data)
+                intervalTree.Add(item.From, item.To, item.Value);
         }
 
-        if (treeType is "reference")
-        {
-            var tree = (IntervalTree.IIntervalTree<long, int>)TreeFactory.CreateEmptyTree<long, int>(treeType);
-
-            var data = _dataCache[dataType];
-
-            foreach (var interval in data)
-            {
-                tree.Add(interval.From, interval.To, interval.Value);
-            }
-            tree.Query(0);
-
-            _treeCache[key] = tree;
-            return tree;
-        }
-        else 
-        {
-            var tree = (IIntervalTree<long, int>)TreeFactory.CreateEmptyTreeRaw<long, int>(treeType);
-
-            var data = _dataCache[dataType];
-
-            foreach (var interval in data)
-            {
-                tree.Add(interval.From, interval.To, interval.Value);
-            }
-            tree.Query(0);
-
-            _treeCache[key] = tree;
-            return tree;
-        }
+        _cachedTree = tree;
+        return tree;
     }
 
     [GlobalSetup]
     public void GlobalSetup()
     {
+        _cachedTree = null;
         var random = new Random(123);
-
-        // approx 20% overlap
-        _dataCache["sparse"] = Enumerable.Range(0, IntervalCount)
-            .Select(_ =>
-            {
-                var start = random.Next(25*IntervalCount);
-                return new Interval<long, int>(
-                    start,
-                    start + random.Next(1, 10),
-                    1);
-            })
-            .ToList();
-
-        // approx 500% overlap
-        _dataCache["dense"] = Enumerable.Range(0, IntervalCount)
-            .Select(_ =>
-            {
-                var start = random.Next(10 * IntervalCount);
-                return new Interval<long, int>(
-                    start,
-                    start + random.Next(1, 100),
-                    1);
-            })
-            .ToList();
+        _data = IntervalGenerator.GenerateLongInt(IntervalCount, random);
+        var max = _data.Max(i => i.To);
+        _max = max < int.MaxValue ? (int)max : int.MaxValue;
     }
 
-    [Benchmark(OperationsPerInvoke = 10_000, Baseline = true)]
-    public void QueryReference()
+    [Benchmark(OperationsPerInvoke = 1_000, Baseline = true)]
+    public void Reference()
     {
-        var tree = (IntervalTree.IntervalTree<long, int>)GetLoadedTree("reference", DataType);
-        for (var i = 0; i < 10_000; i++)
+        var tree = GetLoadedTree<IntervalTree.IntervalTree<long, int>>();
+        for (var i = 0; i < 1_000; i++)
         {
-            var resultCount = 0;
-            var results = tree.Query(i);
-            foreach (var result in results)
-            {
-                resultCount++;
-            }
+            var results = tree.Query(i % _max);
+            _ = results.Count();
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = 100)]
+    public void Linear()
+    {
+        var tree = GetLoadedTree<LinearIntervalTree<long, int>>();
+        for (var i = 0; i < 100; i++)
+        {
+            var results = tree.Query(i % _max);
+            _ = results.Count();
         }
     }
 
     [Benchmark(OperationsPerInvoke = 10_000)]
-    public void QueryLight()
+    public void Light()
     {
-        var tree = (LightIntervalTree<long, int>)GetLoadedTree("light", DataType);
+        var tree = GetLoadedTree<LightIntervalTree<long, int>>();
         for (var i = 0; i < 10_000; i++)
         {
-            var resultCount = 0;
-            var results = tree.Query(i);
-            foreach (var result in results)
-            {
-                resultCount++;
-            }
+            var results = tree.Query(i % _max);
+            _ = results.Count();
         }
     }
 
     [Benchmark(OperationsPerInvoke = 10_000)]
-    public void QueryQuick()
+    public void Quick()
     {
-        var tree = (QuickIntervalTree<long, int>)GetLoadedTree("quick", DataType);
+        var tree = GetLoadedTree<QuickIntervalTree<long, int>>();
         for (var i = 0; i < 10_000; i++)
         {
-            var resultCount = 0;
-            var results = tree.Query(i);
-            foreach (var result in results)
-            {
-                resultCount++;
-            }
+            var results = tree.Query(i % _max);
+            _ = results.Count();
         }
     }
 }

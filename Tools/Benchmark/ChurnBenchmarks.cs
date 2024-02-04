@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using Extras;
 using Jamarino.IntervalTree;
 
 namespace Benchmark;
@@ -26,34 +27,12 @@ public class ChurnBenchmarks
     {
         var rand = new Random(1337);
         
-        _intervals = new Interval<long, int>[IntervalCount];
-        var prev = rand.Next(0, 3);
-        
-        for (int i = 0; i < IntervalCount; i++)
-        {
-            prev += Math.Min(rand.Next(10), rand.Next(10));
-            _intervals[i] = new(prev, prev + rand.Next(1, 10), i);
-        }
-        
-        var end = _intervals[IntervalCount - 1].To;
-        
+        _intervals = IntervalGenerator.GenerateLongInt(IntervalCount, rand);
+                
+        var max = _intervals.Max(i => i.To);
         _queries = Enumerable.Range(0, QueryCount)
-            .Select(_ => rand.NextInt64(end))
+            .Select(_ => rand.NextInt64(max))
             .ToArray();
-
-        Shuffle(_intervals, rand);
-    }
-
-    private void Shuffle<T>(T[] data, Random rand)
-    {
-        var n = data.Length;
-        while (n > 1)
-        {
-            var k = rand.Next(n--);
-            var tmp = data[n];
-            data[n] = data[k];
-            data[k] = tmp;
-        }
     }
 
     [Benchmark(Baseline = true, OperationsPerInvoke = _runs)]
@@ -76,7 +55,7 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                var sum = results.Sum();
+                _ = results.Count();
             }
         }
     }
@@ -101,7 +80,7 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                var sum = results.Sum();
+                _ = results.Count();
             }
         }
     }
@@ -126,7 +105,7 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                var sum = results.Sum();
+                _ = results.Count();
             }
         }
     }
@@ -151,7 +130,7 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                var sum = results.Sum();
+                _ = results.Count();
             }
         }
     }
