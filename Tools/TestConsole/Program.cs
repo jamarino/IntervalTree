@@ -190,4 +190,20 @@ app.AddCommand("concurrentbuild", (
     });
 });
 
+app.AddCommand("intervalgen", (
+    [Argument]
+    int count,
+    int? seed
+    ) =>
+{
+    var rand = new Random(seed ?? 123);
+    var data = IntervalGenerator.GenerateLongInt(count, rand);
+
+    Console.WriteLine("Value\tFrom\tTo");
+    foreach (var item in data)
+    {
+        Console.WriteLine($"{item.Value}\t{item.From}\t{item.To}");
+    }
+});
+
 await app.RunAsync();
