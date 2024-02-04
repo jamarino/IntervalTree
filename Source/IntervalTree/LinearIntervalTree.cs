@@ -15,6 +15,9 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private int _count;
 
     /// <inheritdoc cref="LinearIntervalTree{TKey, TValue}"/>
+    public LinearIntervalTree() : this(null) { }
+
+    /// <inheritdoc cref="LinearIntervalTree{TKey, TValue}"/>
     public LinearIntervalTree(int? initialCapacity = null)
     {
         _intervals = new Interval<TKey, TValue>[initialCapacity ?? 8];

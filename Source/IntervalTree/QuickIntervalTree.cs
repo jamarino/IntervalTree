@@ -20,6 +20,9 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private bool _isBuilt = false;
 
     /// <inheritdoc cref="QuickIntervalTree{TKey, TValue}"/>
+    public QuickIntervalTree() : this(null) { }
+
+    /// <inheritdoc cref="QuickIntervalTree{TKey, TValue}"/>
     public QuickIntervalTree(int? initialCapacity = null)
     {
         _intervals = new Interval<TKey, TValue>[initialCapacity ?? 32];

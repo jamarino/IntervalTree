@@ -16,6 +16,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private int _treeHeight = 0;
 
     /// <inheritdoc cref="LightIntervalTree{TKey, TValue}"/>
+    public LightIntervalTree() : this(null) { }
+
+    /// <inheritdoc cref="LightIntervalTree{TKey, TValue}"/>
     public LightIntervalTree(int? initialCapacity = null)
     {
         _intervals = new List<AugmentedInterval>(initialCapacity ?? 16);
