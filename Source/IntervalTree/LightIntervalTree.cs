@@ -11,7 +11,8 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
     private readonly object _buildLock = new();
-    private readonly List<AugmentedInterval> _intervals;
+    private AugmentedInterval[] _intervals;
+    private int _count = 0;
     private bool _isBuilt = false;
     private int _treeHeight = 0;
 
@@ -21,21 +22,29 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     /// <inheritdoc cref="LightIntervalTree{TKey, TValue}"/>
     public LightIntervalTree(int? initialCapacity = null)
     {
-        _intervals = new List<AugmentedInterval>(initialCapacity ?? 16);
+        _intervals = new AugmentedInterval[initialCapacity ?? 16];
     }
 
-    public int Count => _intervals.Count;
+    public int Count => _count;
 
-    public IEnumerable<TValue> Values => _intervals.Select(i => i.Value);
+    public IEnumerable<TValue> Values =>
+        _intervals.Take(_count).Select(i => i.Value);
 
     public void Add(TKey from, TKey to, TValue value)
     {
-        _intervals.Add(new AugmentedInterval(from, to, to, value));
+        if (_intervals.Length == _count)
+        {
+            var newArray = new AugmentedInterval[2 * _count];
+            Array.Copy(_intervals, newArray, _count);
+            _intervals = newArray;
+        }
+
+        _intervals[_count++] = new(from, to, to, value);
         _isBuilt = false;
     }
 
     public IEnumerator<Interval<TKey, TValue>> GetEnumerator() => 
-        _intervals.Select(i => new Interval<TKey, TValue>(i.From, i.To, i.Value)).GetEnumerator();
+        _intervals.Take(_count).Select(i => new Interval<TKey, TValue>(i.From, i.To, i.Value)).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -44,14 +53,14 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_isBuilt is false)
             Build();
 
-        if (_intervals.Count is 0)
+        if (_count == 0)
             return Enumerable.Empty<TValue>();
 
         List<TValue>? results = null;
 
         Span<int> stack = stackalloc int[2 * _treeHeight];
         stack[0] = 0;
-        stack[1] = _intervals.Count - 1;
+        stack[1] = _count - 1;
         var stackIndex = 1;
 
         while (stackIndex > 0)
@@ -85,7 +94,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
                 var compareMax = target.CompareTo(interval.Max);
                 if (compareMax > 0) continue; // target larger than Max, bail
-
+                
                 // search left
                 stack[++stackIndex] = min;
                 stack[++stackIndex] = center - 1;
@@ -121,14 +130,14 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_isBuilt is false)
             Build();
 
-        if (_intervals.Count == 0)
+        if (_count == 0)
             return Enumerable.Empty<TValue>();
 
         List<TValue>? results = null;
 
         Span<int> stack = stackalloc int[2 * _treeHeight];
         stack[0] = 0;
-        stack[1] = _intervals.Count - 1;
+        stack[1] = _count - 1;
         var stackIndex = 1;
 
         while (stackIndex > 0)
@@ -200,7 +209,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         {
             if (_isBuilt) return;
 
-            if (_intervals.Count is 0)
+            if (_count is 0)
             {
                 _treeHeight = 0;
                 _isBuilt = true;
@@ -208,10 +217,10 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
 
             // order intervals
-            _intervals.Sort();
-            _treeHeight = (int)Math.Log(_intervals.Count, 2) + 1;
+            Array.Sort(_intervals, 0, _count);
+            _treeHeight = (int)Math.Log(_count, 2) + 1;
 
-            UpdateMaxRec(0, _intervals.Count - 1, 0);
+            UpdateMaxRec(0, _count - 1, 0);
 
             _isBuilt = true;
         }
@@ -262,12 +271,13 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     public void Remove(TValue value)
     {
         var i = 0;
-        while (i < _intervals.Count)
+        while (i < _count)
         {
             var interval = _intervals[i];
             if (Equals(interval.Value, value))
             {
-                _intervals.RemoveAt(i);
+                _count--;
+                _intervals[i] = _intervals[_count];
                 _isBuilt = false;
             }
             else
@@ -285,7 +295,8 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public void Clear()
     {
-        _intervals.Clear();
+        _count = 0;
+        _isBuilt = false;
     }
 
     private record struct AugmentedInterval : IComparable<AugmentedInterval>
