@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0 - 2024/03/04
+
+* Added `LinearIntervalTree`
+* Added true parameterless constructors to all tree types
+* `LightIntervalTree` reworked for more efficient removes
+
 ## v1.0.0 - 2024/01/31
 
 * `Remove()` methods implemented
