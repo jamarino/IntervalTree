@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.0 - 2024/04/29
+
+* Added LICENSE.md for explicit MIT license
+
 ## v1.1.0 - 2024/03/04
 
 * Added `LinearIntervalTree`
