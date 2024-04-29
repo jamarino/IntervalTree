@@ -6,6 +6,8 @@ Designed as a drop-in replacement for the popular [RangeTree (GitHub)](https://g
 
 About 3 times the query performance, and as little as 10% of the peak memory usage! See [BENCHMARKS.md](BENCHMARKS.md) for more details.
 
+This project is licensed under the terms of the MIT license. Go right ahead!
+
 ## Example
 
 ```csharp
