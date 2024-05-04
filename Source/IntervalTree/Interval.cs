@@ -5,6 +5,11 @@ public readonly record struct Interval<TKey, TValue> : IComparable<Interval<TKey
 {
     public Interval(TKey from, TKey to, TValue value)
     {
+        if (from.CompareTo(to) > 0)
+        {
+            throw new ArgumentOutOfRangeException($"'{nameof(from)}' must be less than or equal to '{nameof(to)}'");
+        }
+        
         From = from;
         To = to;
         Value = value;

@@ -303,6 +303,11 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     {
         public AugmentedInterval(TKey from, TKey to, TKey max, TValue value)
         {
+            if (from.CompareTo(to) > 0)
+            {
+                throw new ArgumentOutOfRangeException($"'{nameof(from)}' must be less than or equal to '{nameof(to)}'");
+            }
+        
             From = from;
             To = to;
             Max = max;
