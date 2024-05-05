@@ -292,6 +292,19 @@ public class UnitTests
 
         [Test]
         [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void ThrowsWhenAddingReverseInterval(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            
+            tree.Add(10, 10, 1);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => {
+                tree.Add(20, 10, 1);
+            });          
+        }
+        
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedInFirstInterval_ReturnsValueOfFirstInterval(string treeType)
         {
             var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
