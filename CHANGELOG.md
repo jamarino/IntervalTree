@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.1 - 2024/05/05
+
+* Added validation to ensure intervals `from` is smaller or equal to `to`. Kudos to @felix-b!
+
 ## v1.2.0 - 2024/04/29
 
 * Added LICENSE.md for explicit MIT license
