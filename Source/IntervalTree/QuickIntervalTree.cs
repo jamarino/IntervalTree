@@ -148,7 +148,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
         List<TValue>? result = null;
 
-        Span<int> stack = stackalloc int[_treeHeight];
+        Span<int> stack = stackalloc int[_treeHeight + 1];
         stack[0] = 1;
         var stackIndex = 0;
 
