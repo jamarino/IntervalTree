@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.2 - 2024/09/20
+
+* Fixed issue with QuickIntervalTree where querying with a range - `Query(low, high)` - would cause an IndexOutOfRangeException for some lobsided trees. Thanks to @superoctave2 for reporting this issue!
+
 ## v1.2.1 - 2024/05/05
 
 * Added validation to ensure intervals `from` is smaller or equal to `to`. Kudos to @felix-b!

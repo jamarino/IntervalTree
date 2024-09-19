@@ -262,7 +262,10 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
             BuildRec(0, _intervalCount - 1, 1, 0);
 
-            _treeHeight = (int)Math.Log(_nodes.Count, 2) + 1;
+            _treeHeight = _intervalCount <= 1
+                ? 1
+                : (int)Math.Log(_intervalCount, 2) + 1;
+
             _isBuilt = true; 
         }
 

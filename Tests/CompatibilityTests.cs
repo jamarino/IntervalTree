@@ -102,6 +102,39 @@ public class CompatibilityTests
     }
 
     [Test]
+    public void CompareQueryRangeIncrementalSize(
+        [ValueSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        string treeType,
+        [Range(1, 10)]
+        int seed)
+    {
+        const int MaxSize = 15;
+        var random = new Random(seed);
+
+        var originalTree = TreeFactory.CreateEmptyTree<long, int>("reference");
+        var treeUnderTest = TreeFactory.CreateEmptyTree<long, int>(treeType);
+
+        for (var i = 0; i < MaxSize; i++)
+        {
+            var from = random.Next(-MaxSize, MaxSize);
+            var to = from + random.Next(0, MaxSize - from + 1);
+
+            originalTree.Add(from, to, i);
+            treeUnderTest.Add(from, to, i);
+
+            for (int j = -MaxSize - 2; j <= MaxSize + 1; j++)
+            {
+                for (int k = j; k <= MaxSize + 1 ; k++)
+                {
+                    var reference = originalTree.Query(j, k);
+                    var result = treeUnderTest.Query(j, k);
+                    Assert.That(result, Is.EquivalentTo(reference), $"Result mismatch for Query: {(j,k)}, TreeType: {treeType}, Iteration: {i}");
+                }
+            }
+        }
+    }
+
+    [Test]
     public void CompareInteractions(
         [ValueSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
         string treeType,
