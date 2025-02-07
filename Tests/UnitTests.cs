@@ -154,6 +154,18 @@ public class UnitTests
 
         [Test]
         [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeOnFromValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(5, 10);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedRangeAcrossFromValue_ReturnsMatch(string treeType)
         {
             var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
@@ -193,12 +205,184 @@ public class UnitTests
 
         [Test]
         [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void WhenQueriedRangeOnToValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.Query(19, 23);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
         public void WhenQueriedRangeAfterToValue_Returns0Matches(string treeType)
         {
             var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
             tree.Add(10, 19, 1);
 
             var results = tree.Query(22, 25);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeBeforeFromValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(5, 8);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(5, 8);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeOnFromValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(5, 10);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(5, 10);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeAcrossFromValue_ReturnsMatch(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(8, 12);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+            Assert.That(results.First(), Is.EqualTo(1));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(8, 12);
+
+            Assert.That(results.Count(), Is.EqualTo(7));
+            Assert.That(results.First(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeInsideInterval_ReturnsMatch(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(12, 15);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+            Assert.That(results.First(), Is.EqualTo(1));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(12, 15);
+
+            Assert.That(results.Count(), Is.EqualTo(7));
+            Assert.That(results.First(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeAcrossTo_ReturnsMatch(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(18, 23);
+
+            Assert.That(results.Count(), Is.EqualTo(1));
+            Assert.That(results.First(), Is.EqualTo(1));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(18, 23);
+
+            Assert.That(results.Count(), Is.EqualTo(7));
+            Assert.That(results.First(), Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeOnToValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(19, 23);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(19, 23);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void WhenQueriedWithoutLimitsRangeAfterToValue_Returns0Matches(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTreeSansReference<long, int>(treeType);
+            tree.Add(10, 19, 1);
+
+            var results = tree.QueryWithoutLimits(22, 25);
+
+            Assert.That(results.Count(), Is.EqualTo(0));
+
+            // Add 6 more entries to test light version correctly
+            for (int i = 0; i < 6; i++)
+            {
+                tree.Add(10, 19, 1);
+            }
+
+            results = tree.QueryWithoutLimits(22, 25);
 
             Assert.That(results.Count(), Is.EqualTo(0));
         }

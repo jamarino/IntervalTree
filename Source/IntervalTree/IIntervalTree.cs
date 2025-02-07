@@ -35,6 +35,15 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     IEnumerable<TValue> Query(TKey low, TKey high);
 
     /// <summary>
+    /// Find the values associated with all intervals overlapping the provided range.
+    /// Note that two intervals with touching limits are excluded.
+    /// Note that the tree will first be built if required.
+    /// </summary>
+    /// <param name="target">The range to test against stored intervals</param>
+    /// <returns>Values associated with matching intervals</returns>
+    IEnumerable<TValue> QueryWithoutLimits(TKey low, TKey high);
+
+    /// <summary>
     /// Remove all intervals with matching associated value.
     /// </summary>
     /// <param name="value">Value to look for</param>
