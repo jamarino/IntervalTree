@@ -115,11 +115,11 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             var interval = _intervals[i];
 
             var compareFrom = high.CompareTo(interval.From);
-            if (compareFrom < 0)
+            if (compareFrom <= 0)
                 continue;
 
             var compareTo = low.CompareTo(interval.To);
-            if (compareTo > 0)
+            if (compareTo >= 0)
                 continue;
 
             results ??= new List<TValue>();

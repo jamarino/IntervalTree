@@ -262,14 +262,14 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             var compareLow = low.CompareTo(node.Center);
             var compareHigh = high.CompareTo(node.Center);
 
-            if (compareHigh < 0)
+            if (compareHigh <= 0)
             {
                 // look left
                 // test node intervals for overlap
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var intv = _intervals[i];
-                    if (high.CompareTo(intv.From) >= 0)
+                    if (high.CompareTo(intv.From) > 0)
                     {
                         result ??= new List<TValue>();
                         result.Add(intv.Value);
@@ -293,7 +293,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var half = _intervalsDescending[i];
-                    if (low.CompareTo(half.Start) <= 0)
+                    if (low.CompareTo(half.Start) < 0)
                     {
                         var full = _intervals[half.Index];
                         result ??= new List<TValue>();

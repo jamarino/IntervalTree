@@ -230,11 +230,11 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var interval = _intervals[i];
 
                     var compareFrom = high.CompareTo(interval.From);
-                    if (compareFrom < 0)
+                    if (compareFrom <= 0)
                         break;
 
                     var compareTo = low.CompareTo(interval.To);
-                    if (compareTo > 0)
+                    if (compareTo >= 0)
                         continue;
 
                     results ??= new List<TValue>();
@@ -247,7 +247,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 var interval = _intervals[center];
 
                 var compareMax = low.CompareTo(interval.Max);
-                if (compareMax > 0) continue; // target larger than Max, bail
+                if (compareMax >= 0) continue; // target larger than or equal to Max, bail
 
                 // search left
                 stack[++stackIndex] = min;
@@ -256,7 +256,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 // check current node
                 var compareFrom = high.CompareTo(interval.From);
 
-                if (compareFrom < 0) continue; // target smaller than From, bail
+                if (compareFrom <= 0) continue; // target smaller than or equal to From, bail
                 else
                 {
                     var compareTo = low.CompareTo(interval.To);
