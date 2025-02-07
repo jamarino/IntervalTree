@@ -100,6 +100,35 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
+    public IEnumerable<TValue> QueryWithoutLimits(TKey low, TKey high)
+    {
+        if (high.CompareTo(low) < 0)
+            throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
+
+        if (_count == 0)
+            return Enumerable.Empty<TValue>();
+
+        List<TValue>? results = null;
+
+        for (var i = 0; i < _count; i++)
+        {
+            var interval = _intervals[i];
+
+            var compareFrom = high.CompareTo(interval.From);
+            if (compareFrom < 0)
+                continue;
+
+            var compareTo = low.CompareTo(interval.To);
+            if (compareTo > 0)
+                continue;
+
+            results ??= new List<TValue>();
+            results.Add(interval.Value);
+        }
+
+        return results is null ? Enumerable.Empty<TValue>() : results;
+    }
+
     public void Remove(TValue value)
     {
         var i = 0;

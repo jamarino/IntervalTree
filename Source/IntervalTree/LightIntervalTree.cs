@@ -199,6 +199,83 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
+    public IEnumerable<TValue> QueryWithoutLimits(TKey low, TKey high)
+    {
+                if (high.CompareTo(low) < 0)
+            throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
+
+        if (_isBuilt is false)
+            Build();
+
+        if (_count == 0)
+            return Enumerable.Empty<TValue>();
+
+        List<TValue>? results = null;
+
+        Span<int> stack = stackalloc int[2 * _treeHeight];
+        stack[0] = 0;
+        stack[1] = _count - 1;
+        var stackIndex = 1;
+
+        while (stackIndex > 0)
+        {
+            var max = stack[stackIndex--];
+            var min = stack[stackIndex--];
+
+            var span = max - min;
+            if (span < 6) // At small subtree sizes a linear scan is faster
+            {
+                for (var i = min; i <= max; i++)
+                {
+                    var interval = _intervals[i];
+
+                    var compareFrom = high.CompareTo(interval.From);
+                    if (compareFrom < 0)
+                        break;
+
+                    var compareTo = low.CompareTo(interval.To);
+                    if (compareTo > 0)
+                        continue;
+
+                    results ??= new List<TValue>();
+                    results.Add(interval.Value);
+                }
+            }
+            else
+            {
+                var center = (min + max + 1) / 2;
+                var interval = _intervals[center];
+
+                var compareMax = low.CompareTo(interval.Max);
+                if (compareMax > 0) continue; // target larger than Max, bail
+
+                // search left
+                stack[++stackIndex] = min;
+                stack[++stackIndex] = center - 1;
+
+                // check current node
+                var compareFrom = high.CompareTo(interval.From);
+
+                if (compareFrom < 0) continue; // target smaller than From, bail
+                else
+                {
+                    var compareTo = low.CompareTo(interval.To);
+                    if (compareTo <= 0)
+                    {
+                        results ??= new List<TValue>();
+                        results.Add(interval.Value);
+                    }
+                }
+
+                // search right
+                stack[++stackIndex] = center + 1;
+                stack[++stackIndex] = max;
+            }
+        }
+
+        return results is null ? Enumerable.Empty<TValue>() : results;
+    }
+
     /// <summary>
     /// Build the underlying tree structure.
     /// A build is automatically performed, if needed, on the first query after altering the tree.
