@@ -39,6 +39,13 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     /// </summary>
     /// <param name="value">Value to look for</param>
     void Remove(TValue value);
+    
+    /// <summary>
+    /// Remove all values where the value matches the provided predicate. State is passed to the predicate.
+    /// </summary>
+    /// <param name="predicate">Predicate to test values against</param>
+    /// <param name="state">State to pass to the predicate</param>
+    void RemoveWhere<TState>(Func<TValue, TState, bool> predicate, TState state);
 
     /// <summary>
     /// Remove all intervals with a value matching one of the provided values.

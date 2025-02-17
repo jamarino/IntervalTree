@@ -270,11 +270,16 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public void Remove(TValue value)
     {
+        RemoveWhere(static (toFind, v) => v!.Equals(toFind), value);
+    }
+
+    public void RemoveWhere<TState>(Func<TValue, TState, bool> predicate, TState state)
+    {
         var i = 0;
         while (i < _count)
         {
             var interval = _intervals[i];
-            if (Equals(interval.Value, value))
+            if (predicate(interval.Value, state))
             {
                 _count--;
                 _intervals[i] = _intervals[_count];
