@@ -275,6 +275,12 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             value);
     }
 
+    public void Remove(IEnumerable<TValue> values)
+    {
+        foreach (var val in values)
+            Remove(val);
+    }
+
     public void RemoveAll<TState>(Func<Interval<TKey, TValue>, TState, bool> predicate, TState state)
     {
         var i = 0;
@@ -292,12 +298,6 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 i++;
             }
         }
-    }
-
-    public void Remove(IEnumerable<TValue> values)
-    {
-        foreach (var val in values)
-            Remove(val);
     }
 
     public void Clear()
