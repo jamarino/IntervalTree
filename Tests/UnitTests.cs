@@ -740,4 +740,110 @@ public class UnitTests
             Assert.That(intervals, Is.EquivalentTo(Enumerable.Range(0, 3).Select(_ => new IntervalTree.RangeValuePair<long, int>(1, 2, 1))));
         }
     }
+
+    public class Removing : UnitTests
+    {
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void FromAnEmptyTree_DoNothing(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+
+            tree.Remove(1);
+
+            Assert.That(tree.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void FromATreeWithMultipleOfSameValue_RemovesAllOccurences(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            tree.Add(1, 3, 5);
+            tree.Add(1, 3, 5);
+            tree.Add(41, 300, 5);
+            tree.Add(20, 21, 6);
+
+            tree.Remove(5);
+
+            Assert.That(tree.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypes))]
+        public void FromATreeUsingEnumerable_RemovesAllOccurences(string treeType)
+        {
+            var tree = TreeFactory.CreateEmptyTree<long, int>(treeType);
+            
+            tree.Add(1, 3, 5);
+            tree.Add(1, 3, 5);
+            tree.Add(20, 21, 6);
+            tree.Add(41, 300, 5);
+            tree.Add(20, 22, 6);
+
+            tree.Add(10, 20, 7);
+            tree.Add(20, 30, 8);
+
+            tree.Remove([5, 6]);
+
+            Assert.That(tree.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void FromATreeUsingPredicate_RemovesAllOccurencesByValue(string treeType)
+        {
+            var tree = TreeFactory.CreateNonReferenceTree<long, int>(treeType);
+
+            tree.Add(1, 3, 5);
+            tree.Add(1, 3, 5);
+            tree.Add(20, 21, 6);
+            tree.Add(41, 300, 5);
+            tree.Add(20, 22, 6);
+            tree.Add(10, 20, 7);
+            tree.Add(20, 30, 8);
+
+            tree.RemoveAll((intv, _) => intv.Value is 5 or 6, 0);
+
+            Assert.That(tree.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void FromATreeUsingPredicate_RemovesAllOccurencesByFrom(string treeType)
+        {
+            var tree = TreeFactory.CreateNonReferenceTree<long, int>(treeType);
+
+            tree.Add(1, 3, 5);
+            tree.Add(1, 3, 5);
+            tree.Add(41, 300, 5);
+            tree.Add(20, 21, 6);
+            tree.Add(20, 22, 6);
+            tree.Add(10, 20, 7);
+            tree.Add(20, 30, 8);
+
+            tree.RemoveAll((intv, _) => intv.From is 20, 0);
+
+            Assert.That(tree.Count, Is.EqualTo(4));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(TreeFactory), nameof(TreeFactory.TreeTypesSansReference))]
+        public void FromATreeUsingPredicate_RemovesAllOccurencesByTo(string treeType)
+        {
+            var tree = TreeFactory.CreateNonReferenceTree<long, int>(treeType);
+
+            tree.Add(1, 3, 5);
+            tree.Add(1, 3, 5);
+            tree.Add(41, 300, 5);
+            tree.Add(20, 21, 6);
+            tree.Add(20, 22, 6);
+            tree.Add(10, 20, 7);
+            tree.Add(20, 30, 8);
+
+            tree.RemoveAll((intv, _) => intv.To is 21 or 22, 0);
+
+            Assert.That(tree.Count, Is.EqualTo(5));
+        }
+    }
 }
