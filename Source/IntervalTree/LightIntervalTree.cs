@@ -44,7 +44,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     }
 
     public IEnumerator<Interval<TKey, TValue>> GetEnumerator() => 
-        _intervals.Take(_count).Select(i => new Interval<TKey, TValue>(i.From, i.To, i.Value)).GetEnumerator();
+        _intervals.Take(_count).Select(i => i.ToInterval()).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -270,16 +270,18 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public void Remove(TValue value)
     {
-        RemoveAll(static (toFind, v) => v!.Equals(toFind), value);
+        RemoveAll(
+            static (interval, val) => Equals(interval.Value, val),
+            value);
     }
 
-    public void RemoveAll<TState>(Func<TValue, TState, bool> predicate, TState state)
+    public void RemoveAll<TState>(Func<Interval<TKey, TValue>, TState, bool> predicate, TState state)
     {
         var i = 0;
         while (i < _count)
         {
-            var interval = _intervals[i];
-            if (predicate(interval.Value, state))
+            var interval = _intervals[i].ToInterval();
+            if (predicate(interval, state))
             {
                 _count--;
                 _intervals[i] = _intervals[_count];
@@ -331,5 +333,8 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 return fromComparison;
             return To.CompareTo(other.To);
         }
+
+        public readonly Interval<TKey, TValue> ToInterval()
+            => new(From, To, Value);
     }
 }
