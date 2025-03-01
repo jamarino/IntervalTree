@@ -26,6 +26,12 @@ public static class TreeFactory
         return new TreeAdapter<TKey, TValue>((IIntervalTree<TKey, TValue>)tree);
     }
 
+    public static IIntervalTree<TKey, TValue> CreateNonReferenceTree<TKey, TValue>(string type, int? capacity = null)
+        where TKey : IComparable<TKey>
+    {
+        return (IIntervalTree<TKey, TValue>)CreateEmptyTreeRaw<TKey, TValue>(type, capacity);
+    }
+
     public static object CreateEmptyTreeRaw<TKey, TValue>(string type, int? capacity = null) where TKey : IComparable<TKey>
     { 
         if (capacity is null)

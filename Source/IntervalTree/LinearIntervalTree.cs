@@ -102,21 +102,28 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public void Remove(TValue value)
     {
-        var i = 0;
-        while (i < _count)
-        {
-            var interval = _intervals[i];
-            if (Equals(interval.Value, value))
-                _intervals[i] = _intervals[--_count];
-            else
-                i++;
-        }
+        RemoveAll(
+            static (interval, val) => Equals(interval.Value, val),
+            value);
     }
 
     public void Remove(IEnumerable<TValue> values)
     {
         foreach (var val in values)
             Remove(val);
+    }
+
+    public void RemoveAll<TState>(Func<Interval<TKey, TValue>, TState, bool> predicate, TState state)
+    {
+        var i = 0;
+        while (i < _count)
+        {
+            var interval = _intervals[i];
+            if (predicate(interval, state))
+                _intervals[i] = _intervals[--_count];
+            else
+                i++;
+        }
     }
 
     public void Clear()

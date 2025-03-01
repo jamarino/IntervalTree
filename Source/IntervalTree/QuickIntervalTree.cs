@@ -379,11 +379,24 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public void Remove(TValue value)
     {
+        RemoveAll(
+            static (interval, val) => Equals(interval.Value, val),
+            value);
+    }
+
+    public void Remove(IEnumerable<TValue> values)
+    {
+        foreach (var val in values)
+            Remove(val);
+    }
+
+    public void RemoveAll<TState>(Func<Interval<TKey, TValue>, TState, bool> predicate, TState state)
+    {
         var i = 0;
         while (i < _intervalCount)
         {
             var interval = _intervals[i];
-            if (Equals(interval.Value, value))
+            if (predicate(interval, state))
             {
                 _intervalCount--;
                 _intervals[i] = _intervals[_intervalCount];
@@ -394,12 +407,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 i++;
             }
         }
-    }
-
-    public void Remove(IEnumerable<TValue> values)
-    {
-        foreach (var val in values)
-            Remove(val);
     }
 
     public void Clear()

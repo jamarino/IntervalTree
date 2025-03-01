@@ -47,6 +47,13 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     void Remove(IEnumerable<TValue> values);
 
     /// <summary>
+    /// Remove all values where the value matches the provided predicate. State is passed to the predicate.
+    /// </summary>
+    /// <param name="predicate">Predicate to test values against</param>
+    /// <param name="state">State to pass to the predicate</param>
+    void RemoveAll<TState>(Func<Interval<TKey, TValue>, TState, bool> predicate, TState state);
+
+    /// <summary>
     /// Clear all data from tree. Allows for reusing of trees, instead of allocating a new ones.
     /// </summary>
     void Clear();
