@@ -16,14 +16,14 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     private int _intervalCount = 0;
     private IntervalHalf[] _intervalsDescending = Array.Empty<IntervalHalf>();
     private int _treeHeight;
-    private List<Node> _nodes = new();
+    private readonly List<Node> _nodes = new();
     private bool _isBuilt = false;
 
     /// <inheritdoc cref="QuickIntervalTree{TKey, TValue}"/>
     public QuickIntervalTree() : this(null) { }
 
     /// <inheritdoc cref="QuickIntervalTree{TKey, TValue}"/>
-    public QuickIntervalTree(int? initialCapacity = null)
+    public QuickIntervalTree(int? initialCapacity)
     {
         _intervals = new Interval<TKey, TValue>[initialCapacity ?? 32];
     }
@@ -54,7 +54,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Query(TKey target)
     {
-        if (_isBuilt is false)
+        if (!_isBuilt)
             Build();
 
         List<TValue>? result = null;
@@ -66,7 +66,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         while (stackIndex >= 0)
         {
             var nodeIndex = stack[stackIndex--];
-            
+
             var node = _nodes[nodeIndex];
 
             if (node.IntervalCount == 0) continue;
@@ -143,7 +143,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (high.CompareTo(low) < 0)
             throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
 
-        if (_isBuilt is false)
+        if (!_isBuilt)
             Build();
 
         List<TValue>? result = null;
@@ -160,7 +160,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
             if (node.IntervalCount == 0) continue;
 
-            //var centerComparison = target.CompareTo(node.Center);
             var compareLow = low.CompareTo(node.Center);
             var compareHigh = high.CompareTo(node.Center);
 
@@ -266,13 +265,13 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 ? 1
                 : (int)Math.Log(_intervalCount, 2) + 1;
 
-            _isBuilt = true; 
+            _isBuilt = true;
         }
 
         void BuildRec(int min, int max, int nodeIndex, int recursionLevel)
         {
             if (recursionLevel++ > 100)
-                throw new Exception($"Excessive recursion detected, aborting to prevent stack overflow. Please check thread safety.");
+                throw new InvalidOperationException($"Excessive recursion detected, aborting to prevent stack overflow. Please check thread safety.");
 
             var sliceWidth = max - min + 1;
 
@@ -340,7 +339,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
             // sort descending interval halves
             Array.Sort(_intervalsDescending, nodeIntervalIndex, nodeIntervalCount);
-            Array.Reverse( _intervalsDescending, nodeIntervalIndex, nodeIntervalCount);
+            Array.Reverse(_intervalsDescending, nodeIntervalIndex, nodeIntervalCount);
 
             if (nodeIntervalCount == sliceWidth)
             {
@@ -365,9 +364,6 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             // add two placeholder nodes to fixate the child indexes
             _nodes.Add(new Node());
             _nodes.Add(new Node());
-
-            // recurse
-            var leftSize = i - nodeIntervalCount;
 
             // left
             BuildRec(min, i - nodeIntervalCount - 1, nextIndex, recursionLevel);

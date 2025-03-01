@@ -24,7 +24,7 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     /// </summary>
     /// <param name="target">The key to test against stored intervals</param>
     /// <returns>Values associated with matching intervals</returns>
-    IEnumerable<TValue> Query(TKey key);
+    IEnumerable<TValue> Query(TKey target);
 
     /// <summary>
     /// Find the values associated with all intervals overlapping the provided range.

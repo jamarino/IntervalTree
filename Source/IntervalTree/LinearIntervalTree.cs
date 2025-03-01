@@ -18,14 +18,14 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     public LinearIntervalTree() : this(null) { }
 
     /// <inheritdoc cref="LinearIntervalTree{TKey, TValue}"/>
-    public LinearIntervalTree(int? initialCapacity = null)
+    public LinearIntervalTree(int? initialCapacity)
     {
         _intervals = new Interval<TKey, TValue>[initialCapacity ?? 8];
     }
 
     public int Count => _count;
 
-    public IEnumerable<TValue> Values => 
+    public IEnumerable<TValue> Values =>
         _intervals.Take(_count).Select(i => i.Value);
 
     public void Add(TKey from, TKey to, TValue value)
@@ -40,7 +40,7 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         _intervals[_count++] = new(from, to, value);
     }
 
-    public IEnumerator<Interval<TKey, TValue>> GetEnumerator() => 
+    public IEnumerator<Interval<TKey, TValue>> GetEnumerator() =>
         _intervals.Take(_count).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

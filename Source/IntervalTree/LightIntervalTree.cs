@@ -20,7 +20,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     public LightIntervalTree() : this(null) { }
 
     /// <inheritdoc cref="LightIntervalTree{TKey, TValue}"/>
-    public LightIntervalTree(int? initialCapacity = null)
+    public LightIntervalTree(int? initialCapacity)
     {
         _intervals = new AugmentedInterval[initialCapacity ?? 16];
     }
@@ -43,14 +43,14 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         _isBuilt = false;
     }
 
-    public IEnumerator<Interval<TKey, TValue>> GetEnumerator() => 
+    public IEnumerator<Interval<TKey, TValue>> GetEnumerator() =>
         _intervals.Take(_count).Select(i => i.ToInterval()).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public IEnumerable<TValue> Query(TKey target)
     {
-        if (_isBuilt is false)
+        if (!_isBuilt)
             Build();
 
         if (_count == 0)
@@ -94,7 +94,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
                 var compareMax = target.CompareTo(interval.Max);
                 if (compareMax > 0) continue; // target larger than Max, bail
-                
+
                 // search left
                 stack[++stackIndex] = min;
                 stack[++stackIndex] = center - 1;
@@ -127,7 +127,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (high.CompareTo(low) < 0)
             throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
 
-        if (_isBuilt is false)
+        if (!_isBuilt)
             Build();
 
         if (_count == 0)
@@ -228,7 +228,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         TKey UpdateMaxRec(int min, int max, int recursionLevel)
         {
             if (recursionLevel++ > 100)
-                throw new Exception($"Excessive recursion detected, aborting to prevent stack overflow. Please check thread safety.");
+                throw new InvalidOperationException($"Excessive recursion detected, aborting to prevent stack overflow. Please check thread safety.");
 
             var center = min + (max - min + 1) / 2;
 
@@ -312,9 +312,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         {
             if (from.CompareTo(to) > 0)
             {
-                throw new ArgumentOutOfRangeException($"'{nameof(from)}' must be less than or equal to '{nameof(to)}'");
+                throw new ArgumentOutOfRangeException(nameof(from), $"'{nameof(from)}' must be less than or equal to '{nameof(to)}'");
             }
-        
+
             From = from;
             To = to;
             Max = max;

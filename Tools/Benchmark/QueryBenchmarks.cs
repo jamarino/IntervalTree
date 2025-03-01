@@ -15,7 +15,7 @@ public class QueryBenchmarks
     private object? _cachedTree;
 
     [Params(100, 1_000, 10_000, 100_000)]
-    public int IntervalCount = 1;
+    public int IntervalCount { get; set; } = 1;
 
     private T GetLoadedTree<T>()
         where T : class, new()
