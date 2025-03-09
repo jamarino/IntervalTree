@@ -47,28 +47,7 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Query(TKey target)
     {
-        if (_count is 0)
-            return Enumerable.Empty<TValue>();
-
-        List<TValue>? results = null;
-
-        for (var i = 0; i < _count; i++)
-        {
-            var interval = _intervals[i];
-
-            var compareFrom = target.CompareTo(interval.From);
-            if (compareFrom < 0)
-                continue;
-
-            var compareTo = target.CompareTo(interval.To);
-            if (compareTo > 0)
-                continue;
-
-            results ??= new List<TValue>();
-            results.Add(interval.Value);
-        }
-
-        return results is null ? Enumerable.Empty<TValue>() : results;
+        return Query(target, target);
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)

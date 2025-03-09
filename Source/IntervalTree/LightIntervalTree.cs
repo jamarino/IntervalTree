@@ -50,76 +50,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Query(TKey target)
     {
-        if (!_isBuilt)
-            Build();
-
-        if (_count == 0)
-            return Enumerable.Empty<TValue>();
-
-        List<TValue>? results = null;
-
-        Span<int> stack = stackalloc int[2 * _treeHeight];
-        stack[0] = 0;
-        stack[1] = _count - 1;
-        var stackIndex = 1;
-
-        while (stackIndex > 0)
-        {
-            var max = stack[stackIndex--];
-            var min = stack[stackIndex--];
-
-            var span = max - min;
-            if (span < 6) // At small subtree sizes a linear scan is faster
-            {
-                for (var i = min; i <= max; i++)
-                {
-                    var interval = _intervals[i];
-
-                    var compareFrom = target.CompareTo(interval.From);
-                    if (compareFrom < 0)
-                        break;
-
-                    var compareTo = target.CompareTo(interval.To);
-                    if (compareTo > 0)
-                        continue;
-
-                    results ??= new List<TValue>();
-                    results.Add(interval.Value);
-                }
-            }
-            else
-            {
-                var center = min + (max - min + 1) / 2;
-                var interval = _intervals[center];
-
-                var compareMax = target.CompareTo(interval.Max);
-                if (compareMax > 0) continue; // target larger than Max, bail
-
-                // search left
-                stack[++stackIndex] = min;
-                stack[++stackIndex] = center - 1;
-
-                // check current node
-                var compareFrom = target.CompareTo(interval.From);
-
-                if (compareFrom < 0) continue; // target smaller than From, bail
-                else
-                {
-                    var compareTo = target.CompareTo(interval.To);
-                    if (compareTo <= 0)
-                    {
-                        results ??= new List<TValue>();
-                        results.Add(interval.Value);
-                    }
-                }
-
-                // search right
-                stack[++stackIndex] = center + 1;
-                stack[++stackIndex] = max;
-            }
-        }
-
-        return results is null ? Enumerable.Empty<TValue>() : results;
+        return Query(target, target);
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)
