@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections;
 
 namespace Jamarino.IntervalTree;
@@ -57,9 +58,8 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_isBuilt is false)
             Build();
 
-        List<TValue>? result = null;
 
-        Span<int> stack = stackalloc int[_treeHeight];
+        int[] stack = ArrayPool<int>.Shared.Rent(_treeHeight);
         stack[0] = 1;
         var stackIndex = 0;
 
@@ -82,8 +82,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var intv = _intervals[i];
                     if (target.CompareTo(intv.From) >= 0)
                     {
-                        result ??= new List<TValue>();
-                        result.Add(intv.Value);
+                        yield return intv.Value;
                     }
                     else
                     {
@@ -107,8 +106,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     if (target.CompareTo(half.Start) <= 0)
                     {
                         var full = _intervals[half.Index];
-                        result ??= new List<TValue>();
-                        result.Add(full.Value);
+                        yield return full.Value;
                     }
                     else
                     {
@@ -129,13 +127,12 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var intv = _intervals[i];
-                    result ??= new List<TValue>();
-                    result.Add(intv.Value);
+                    yield return intv.Value;
                 }
             }
         }
 
-        return result ?? Enumerable.Empty<TValue>();
+        ArrayPool<int>.Shared.Return(stack);
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)
@@ -146,9 +143,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
         if (_isBuilt is false)
             Build();
 
-        List<TValue>? result = null;
-
-        Span<int> stack = stackalloc int[_treeHeight];
+        int[] stack = ArrayPool<int>.Shared.Rent(_treeHeight);
         stack[0] = 1;
         var stackIndex = 0;
 
@@ -173,8 +168,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var intv = _intervals[i];
                     if (high.CompareTo(intv.From) >= 0)
                     {
-                        result ??= new List<TValue>();
-                        result.Add(intv.Value);
+                        yield return intv.Value;
                     }
                     else
                     {
@@ -198,8 +192,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     if (low.CompareTo(half.Start) <= 0)
                     {
                         var full = _intervals[half.Index];
-                        result ??= new List<TValue>();
-                        result.Add(full.Value);
+                        yield return full.Value;
                     }
                     else
                     {
@@ -219,8 +212,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var intv = _intervals[i];
-                    result ??= new List<TValue>();
-                    result.Add(intv.Value);
+                    yield return intv.Value;
                 }
 
                 if (node.Next is not 0)
@@ -233,7 +225,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
         }
 
-        return result ?? Enumerable.Empty<TValue>();
+        ArrayPool<int>.Shared.Return(stack);
     }
 
     /// <summary>
