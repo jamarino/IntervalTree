@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections;
 
 namespace Jamarino.IntervalTree;
@@ -54,11 +55,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             Build();
 
         if (_count == 0)
-            return Enumerable.Empty<TValue>();
+            yield break;
 
-        List<TValue>? results = null;
-
-        Span<int> stack = stackalloc int[2 * _treeHeight];
+        int[] stack = ArrayPool<int>.Shared.Rent(2 * _treeHeight);
         stack[0] = 0;
         stack[1] = _count - 1;
         var stackIndex = 1;
@@ -83,8 +82,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     if (compareTo > 0)
                         continue;
 
-                    results ??= new List<TValue>();
-                    results.Add(interval.Value);
+                    yield return interval.Value;
                 }
             }
             else
@@ -108,8 +106,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var compareTo = target.CompareTo(interval.To);
                     if (compareTo <= 0)
                     {
-                        results ??= new List<TValue>();
-                        results.Add(interval.Value);
+                        yield return interval.Value;
                     }
                 }
 
@@ -118,8 +115,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 stack[++stackIndex] = max;
             }
         }
-
-        return results is null ? Enumerable.Empty<TValue>() : results;
+        ArrayPool<int>.Shared.Return(stack);
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)
@@ -131,11 +127,9 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             Build();
 
         if (_count == 0)
-            return Enumerable.Empty<TValue>();
+            yield break;
 
-        List<TValue>? results = null;
-
-        Span<int> stack = stackalloc int[2 * _treeHeight];
+        int[] stack = ArrayPool<int>.Shared.Rent(2 * _treeHeight);
         stack[0] = 0;
         stack[1] = _count - 1;
         var stackIndex = 1;
@@ -160,8 +154,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     if (compareTo > 0)
                         continue;
 
-                    results ??= new List<TValue>();
-                    results.Add(interval.Value);
+                    yield return interval.Value;
                 }
             }
             else
@@ -185,8 +178,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var compareTo = low.CompareTo(interval.To);
                     if (compareTo <= 0)
                     {
-                        results ??= new List<TValue>();
-                        results.Add(interval.Value);
+                        yield return interval.Value;
                     }
                 }
 
@@ -196,7 +188,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
         }
 
-        return results is null ? Enumerable.Empty<TValue>() : results;
+        ArrayPool<int>.Shared.Return(stack);
     }
 
     /// <summary>

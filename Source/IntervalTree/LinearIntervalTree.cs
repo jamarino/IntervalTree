@@ -48,9 +48,7 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
     public IEnumerable<TValue> Query(TKey target)
     {
         if (_count is 0)
-            return Enumerable.Empty<TValue>();
-
-        List<TValue>? results = null;
+            yield break;
 
         for (var i = 0; i < _count; i++)
         {
@@ -64,11 +62,8 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             if (compareTo > 0)
                 continue;
 
-            results ??= new List<TValue>();
-            results.Add(interval.Value);
+            yield return interval.Value;
         }
-
-        return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)
@@ -77,9 +72,7 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
 
         if (_count == 0)
-            return Enumerable.Empty<TValue>();
-
-        List<TValue>? results = null;
+            yield break;
 
         for (var i = 0; i < _count; i++)
         {
@@ -93,11 +86,8 @@ public class LinearIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             if (compareTo > 0)
                 continue;
 
-            results ??= new List<TValue>();
-            results.Add(interval.Value);
+            yield return interval.Value;
         }
-
-        return results is null ? Enumerable.Empty<TValue>() : results;
     }
 
     public void Remove(TValue value)
