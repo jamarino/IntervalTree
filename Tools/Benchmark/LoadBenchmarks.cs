@@ -16,7 +16,7 @@ public class LoadBenchmarks
     private const int _runs = 8;
     private Interval<long, int>[] _data = [];
 
-    [Params(100, 1_000, 10_000, 100_000)]
+    [Params(100, /*1_000, 10_000,*/ 100_000)]
     public int IntervalCount = 1;
 
     [GlobalSetup]

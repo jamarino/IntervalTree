@@ -8,7 +8,9 @@ namespace Jamarino.IntervalTree;
 /// </summary>
 /// <typeparam name="TKey">Type used to specify the start and end of each intervals</typeparam>
 /// <typeparam name="TValue">Type of the value associated with each interval</typeparam>
-public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
+public class QuickIntervalTree<TKey, TValue>
+    : IIntervalTree<TKey, TValue>
+    , IFindableTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
     private readonly object _buildLock = new();
@@ -54,18 +56,41 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Query(TKey target)
     {
-        return Query(target, target);
+        return Find(
+            target,
+            target,
+            new List<TValue>(),
+            static (interval, state) =>
+            {
+                state.Add(interval.Value);
+                return state;
+            });
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)
+    {
+        return Find(
+            low,
+            high,
+            new List<TValue>(),
+            static (interval, state) =>
+            {
+                state.Add(interval.Value);
+                return state;
+            });
+    }
+
+    public TState Find<TState>(
+        TKey low,
+        TKey high,
+        TState initialState,
+        Func<Interval<TKey, TValue>, TState, TState> accumulator)
     {
         if (high.CompareTo(low) < 0)
             throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
 
         if (!_isBuilt)
             Build();
-
-        List<TValue>? result = null;
 
         Span<int> stack = stackalloc int[_treeHeight];
         stack[0] = 1;
@@ -91,8 +116,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var intv = _intervals[i];
                     if (high.CompareTo(intv.From) >= 0)
                     {
-                        result ??= new List<TValue>();
-                        result.Add(intv.Value);
+                        initialState = accumulator(intv, initialState);
                     }
                     else
                     {
@@ -116,8 +140,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     if (low.CompareTo(half.Start) <= 0)
                     {
                         var full = _intervals[half.Index];
-                        result ??= new List<TValue>();
-                        result.Add(full.Value);
+                        initialState = accumulator(full, initialState);
                     }
                     else
                     {
@@ -137,8 +160,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                 for (var i = node.IntervalIndex; i < node.IntervalIndex + node.IntervalCount; i++)
                 {
                     var intv = _intervals[i];
-                    result ??= new List<TValue>();
-                    result.Add(intv.Value);
+                    initialState = accumulator(intv, initialState);
                 }
 
                 if (node.Next is not 0)
@@ -151,7 +173,7 @@ public class QuickIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
         }
 
-        return result ?? Enumerable.Empty<TValue>();
+        return initialState;
     }
 
     /// <summary>

@@ -7,7 +7,9 @@ namespace Jamarino.IntervalTree;
 /// </summary>
 /// <typeparam name="TKey">Type used to specify the start and end of each intervals</typeparam>
 /// <typeparam name="TValue">Type of the value associated with each interval</typeparam>
-public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
+public class LightIntervalTree<TKey, TValue>
+    : IIntervalTree<TKey, TValue>
+    , IFindableTree<TKey, TValue>
     where TKey : IComparable<TKey>
 {
     private readonly object _buildLock = new();
@@ -50,10 +52,35 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
 
     public IEnumerable<TValue> Query(TKey target)
     {
-        return Query(target, target);
+        return Find(
+            target,
+            target,
+            new List<TValue>(),
+            static (interval, state) =>
+            {
+                state.Add(interval.Value);
+                return state;
+            });
     }
 
     public IEnumerable<TValue> Query(TKey low, TKey high)
+    {
+        return Find(
+            low,
+            high,
+            new List<TValue>(),
+            static (interval, state) =>
+            {
+                state.Add(interval.Value);
+                return state;
+            });
+    }
+
+    public TState Find<TState>(
+        TKey low,
+        TKey high,
+        TState initialState,
+        Func<Interval<TKey, TValue>, TState, TState> accumulator)
     {
         if (high.CompareTo(low) < 0)
             throw new ArgumentException("Argument 'high' must not be smaller than argument 'low'", nameof(high));
@@ -62,9 +89,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             Build();
 
         if (_count == 0)
-            return Enumerable.Empty<TValue>();
-
-        List<TValue>? results = null;
+            return initialState;
 
         Span<int> stack = stackalloc int[2 * _treeHeight];
         stack[0] = 0;
@@ -91,8 +116,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     if (compareTo > 0)
                         continue;
 
-                    results ??= new List<TValue>();
-                    results.Add(interval.Value);
+                    initialState = accumulator(interval.ToInterval(), initialState);
                 }
             }
             else
@@ -116,8 +140,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
                     var compareTo = low.CompareTo(interval.To);
                     if (compareTo <= 0)
                     {
-                        results ??= new List<TValue>();
-                        results.Add(interval.Value);
+                        initialState = accumulator(interval.ToInterval(), initialState);
                     }
                 }
 
@@ -127,7 +150,7 @@ public class LightIntervalTree<TKey, TValue> : IIntervalTree<TKey, TValue>
             }
         }
 
-        return results is null ? Enumerable.Empty<TValue>() : results;
+        return initialState;
     }
 
     /// <summary>

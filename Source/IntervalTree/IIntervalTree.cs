@@ -30,7 +30,8 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     /// Find the values associated with all intervals overlapping the provided range.
     /// Note that the tree will first be built if required.
     /// </summary>
-    /// <param name="target">The range to test against stored intervals</param>
+    /// <param name="low">The low end of the search interval (inclusive)</param>
+    /// <param name="high">The high end of the search interval (inclusive)</param>
     /// <returns>Values associated with matching intervals</returns>
     IEnumerable<TValue> Query(TKey low, TKey high);
 
@@ -47,7 +48,7 @@ public interface IIntervalTree<TKey, TValue> : IEnumerable<Interval<TKey, TValue
     void Remove(IEnumerable<TValue> values);
 
     /// <summary>
-    /// Remove all values where the value matches the provided predicate. State is passed to the predicate.
+    /// Remove all intervals matched by the provided predicate. State is passed to the predicate.
     /// </summary>
     /// <param name="predicate">Predicate to test values against</param>
     /// <param name="state">State to pass to the predicate</param>

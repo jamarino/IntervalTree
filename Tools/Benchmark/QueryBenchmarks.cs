@@ -14,7 +14,7 @@ public class QueryBenchmarks
     private int _max = 0;
     private object? _cachedTree;
 
-    [Params(100, 1_000, 10_000, 100_000)]
+    [Params(100, /* 1_000, 10_000,*/ 100_000)]
     public int IntervalCount { get; set; } = 1;
 
     private T GetLoadedTree<T>()
@@ -61,35 +61,113 @@ public class QueryBenchmarks
     }
 
     [Benchmark(OperationsPerInvoke = 100)]
-    public void Linear()
+    public int Linear()
     {
         var tree = GetLoadedTree<LinearIntervalTree<long, int>>();
+        var ret = 0;
+
+        for (var i = 0; i < 10_000; i++)
+        {
+            var results = tree.Query(i % _max);
+            ret = results.Count();
+        }
+
+        return ret;
+    }
+
+    [Benchmark(OperationsPerInvoke = 100)]
+    public int LinearFind()
+    {
+        var tree = GetLoadedTree<LinearIntervalTree<long, int>>();
+        var results = new List<int>();
+        var ret = 0;
+
         for (var i = 0; i < 100; i++)
         {
-            var results = tree.Query(i % _max);
-            _ = results.Count();
+            results.Clear();
+            var target = i % _max;
+            tree.Find(
+                target,
+                target,
+                results,
+                static (intv, s) => { s.Add(intv.Value); return s; });
+            ret = results.Count;
         }
+
+        return ret;
     }
 
     [Benchmark(OperationsPerInvoke = 10_000)]
-    public void Light()
+    public int Light()
     {
         var tree = GetLoadedTree<LightIntervalTree<long, int>>();
+        var ret = 0;
+
         for (var i = 0; i < 10_000; i++)
         {
             var results = tree.Query(i % _max);
-            _ = results.Count();
+            ret = results.Count();
         }
+
+        return ret;
     }
 
     [Benchmark(OperationsPerInvoke = 10_000)]
-    public void Quick()
+    public int LightFind()
+    {
+        var tree = GetLoadedTree<LightIntervalTree<long, int>>();
+        var results = new List<int>();
+        var ret = 0;
+
+        for (var i = 0; i < 10_000; i++)
+        {
+            results.Clear();
+            var target = i % _max;
+            tree.Find(
+                target,
+                target,
+                results,
+                static (intv, s) => { s.Add(intv.Value); return s; });
+            ret = results.Count;
+        }
+
+        return ret;
+    }
+
+    [Benchmark(OperationsPerInvoke = 10_000)]
+    public int Quick()
     {
         var tree = GetLoadedTree<QuickIntervalTree<long, int>>();
+        var ret = 0;
+
         for (var i = 0; i < 10_000; i++)
         {
             var results = tree.Query(i % _max);
-            _ = results.Count();
+            ret = results.Count();
         }
+
+        return ret;
+    }
+
+    [Benchmark(OperationsPerInvoke = 10_000)]
+    public int QuickFind()
+    {
+        var tree = GetLoadedTree<QuickIntervalTree<long, int>>();
+        var results = new List<int>();
+        var ret = 0;
+
+        for (var i = 0; i < 10_000; i++)
+        {
+            results.Clear();
+            var target = i % _max;
+            tree.Find(
+                target,
+                target,
+                results,
+                static (intv, s) => { s.Add(intv.Value); return s; });
+            ret = results.Count;
+        }
+
+        return ret;
     }
 }

@@ -36,8 +36,9 @@ public class ChurnBenchmarks
     }
 
     [Benchmark(Baseline = true, OperationsPerInvoke = _runs)]
-    public void Reference()
+    public int Reference()
     {
+        var ret = 0;
         var tree = new IntervalTree.IntervalTree<long, int>();
 
         for (var run = 0; run < _runs; run++)
@@ -55,14 +56,17 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                _ = results.Count();
+                ret = results.Count();
             }
         }
+
+        return ret;
     }
 
     [Benchmark(OperationsPerInvoke = _runs)]
-    public void Linear()
+    public int Linear()
     {
+        var ret = 0;
         var tree = new LinearIntervalTree<long, int>(IntervalCount);
 
         for (var run = 0; run < _runs; run++)
@@ -80,14 +84,17 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                _ = results.Count();
+                ret = results.Count();
             }
         }
+
+        return ret;
     }
 
     [Benchmark(OperationsPerInvoke = _runs)]
-    public void Light()
+    public int Light()
     {
+        var ret = 0;
         var tree = new LightIntervalTree<long, int>(IntervalCount);
 
         for (var run = 0; run < _runs; run++)
@@ -105,14 +112,17 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                _ = results.Count();
+                ret = results.Count();
             }
         }
+
+        return ret;
     }
 
     [Benchmark(OperationsPerInvoke = _runs)]
-    public void Quick()
+    public int Quick()
     {
+        var ret = 0;
         var tree = new QuickIntervalTree<long, int>(IntervalCount);
 
         for (var run = 0; run < _runs; run++)
@@ -130,8 +140,10 @@ public class ChurnBenchmarks
             for (var i = 0; i < QueryCount; i++)
             {
                 var results = tree.Query(_queries[i]);
-                _ = results.Count();
+                ret = results.Count();
             }
         }
+
+        return ret;
     }
 }

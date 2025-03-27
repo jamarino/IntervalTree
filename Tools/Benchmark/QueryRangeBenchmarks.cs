@@ -14,7 +14,7 @@ public class QueryRangeBenchmarks
     private int _max = 0;
     private object? _cachedTree;
 
-    [Params(100, 1_000, 10_000, 100_000)]
+    [Params(100, /*1_000, 10_000,*/ 100_000)]
     public int IntervalCount = 1;
 
     private T GetLoadedTree<T>()
